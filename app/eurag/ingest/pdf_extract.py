@@ -1,4 +1,4 @@
-"""Extract clean, reading-ordered text lines from Official Journal PDFs."""
+"""Extract clean, reading-ordered text lines from Official Journal and consolidated EUR-Lex PDFs."""
 
 from __future__ import annotations
 
@@ -24,8 +24,14 @@ _NOISE_PATTERNS = [
         r"^\d{4}/\d{3,4}$",
         r"^[IVX]+$",
         r"^\((Legislative acts|Text with EEA relevance)\)$",
+        # Consolidated texts: page header, bare amendment markers, deleted provisions.
+        r"^\d{4,5}[A-Z]\d{4} — [A-Z]{2} — \d{2}\.\d{2}\.\d{4} — \d{3}\.\d{3} — \d+$",
+        r"^[▼►][BMCA]\d*$",
+        r"^▼[BMCA]\d* _+$",
     )
 ]
+# Inline amendment markers around changed passages: "►M1 new text ◄".
+_INLINE_MARKER = re.compile(r"►[BMCA]\d*\s*|\s*◄")
 # Footnotes start with "(n)" and are set in a smaller font than the body text.
 _FOOTNOTE = re.compile(r"^\(\d+\)")
 
@@ -97,7 +103,10 @@ def _body_font_size(doc: pymupdf.Document) -> float:
 def _join_hyphenated(lines: list[Line]) -> list[Line]:
     out: list[Line] = []
     for line in lines:
-        if out and out[-1].text.endswith("-") and line.text[:1].islower():
+        if out and out[-1].text.endswith("\xad"):  # soft hyphen: always a word break
+            prev = out[-1]
+            out[-1] = Line(prev.page, prev.text[:-1] + line.text)
+        elif out and out[-1].text.endswith("-") and line.text[:1].islower():
             prev = out[-1]
             out[-1] = Line(prev.page, prev.text[:-1] + line.text)
         else:
@@ -128,6 +137,6 @@ def extract_lines(path: Path) -> list[Line]:
                 if any(y0 >= fy and x0 < fx1 and x1 > fx0 for fx0, fx1, fy in footnote_areas):
                     continue
                 for t in block_lines:
-                    if not _is_noise(t):
+                    if not _is_noise(t) and (t := _INLINE_MARKER.sub("", t).strip()):
                         lines.append(Line(page_no, t))
     return _join_hyphenated(lines)

@@ -275,8 +275,11 @@
   question: How does the GDPR apply to high-risk AI systems that process personal data?
   expected:
     - {act: AI Act, unit: article, number: "2", paragraph: "7"}
-    - {act: AI Act, unit: article, number: "10"}
-  note: Answer should also draw on the GDPR (no specific article given).
+    - {act: AI Act, unit: article, number: "4a"}
+    - {act: AI Act, unit: article, number: "10", optional: true}
+  note: >-
+    Answer should also draw on the GDPR (no specific article given). Special-category data for bias
+    detection moved from Art. 10(5) to Art. 4a with the Digital Omnibus on AI (Regulation (EU) 2026/1744).
 - id: xdoc-05
   category: cross-document
   question: Compare the maximum fines under the GDPR and the AI Act.

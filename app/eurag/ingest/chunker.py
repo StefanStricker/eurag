@@ -3,14 +3,19 @@
 from __future__ import annotations
 
 import re
+import string
 from dataclasses import asdict, dataclass, field
 
 from eurag.ingest.pdf_extract import Line
 
 MAX_CHARS = 1800
+_LETTERS, _DIGITS = string.ascii_lowercase, string.digits
+_UNIT_NAMES = {"article": "Article", "recital": "Recital", "annex": "Annex"}
 
 _RECITALS_START = re.compile(r"^Whereas:$")
 _ENACTING_START = re.compile(r"^HAVE ADOPTED THIS (REGULATION|DIRECTIVE|DECISION):?$")
+# Consolidated regulations omit the preamble; the enacting terms start right away.
+_ENACTING_FIRST = re.compile(r"^(CHAPTER I|Article 1)$")
 _SIGNATURE = re.compile(r"^Done at \w+, \d")
 _RECITAL = re.compile(r"^\((\d+)\)\s*(.*)$")
 _CHAPTER = re.compile(r"^CHAPTER ([IVXLC]+)$")
@@ -24,11 +29,13 @@ _PARAGRAPH = re.compile(r"^(\d+)\.(?:\s+|$)")
 class ActInfo:
     act: str  # short name, e.g. "GDPR"
     title: str
-    celex: str
+    celex: str  # the act as published in the OJ
+    consolidated: str = ""  # CELEX of the consolidated version the text is taken from, if any
 
-    @property
-    def url(self) -> str:
-        return f"https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:{self.celex}"
+    def url(self, unit_type: str) -> str:
+        # Recitals only exist in the OJ text; articles and annexes link to the consolidated version.
+        celex = self.consolidated if self.consolidated and unit_type != "recital" else self.celex
+        return f"https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:{celex}"
 
 
 @dataclass
@@ -58,8 +65,7 @@ class Chunk:
 
     @property
     def label(self) -> str:
-        name = {"article": "Article", "recital": "Recital", "annex": "Annex"}[self.unit_type]
-        s = f"{self.act} – {name} {self.number}"
+        s = f"{self.act} – {_UNIT_NAMES[self.unit_type]} {self.number}"
         if self.paragraphs:
             s += f" (para. {self.paragraphs})"
         if self.title:
@@ -70,13 +76,28 @@ class Chunk:
         return {**asdict(self), "label": self.label}
 
 
+def _follows(prev: str | None, number: str) -> bool:
+    """True if article `number` can follow `prev`: N -> N+1, or an inserted article N -> Na -> Nb."""
+    if prev is None:
+        return number == "1"
+    n, suffix = int(number.rstrip(_LETTERS)), number.lstrip(_DIGITS)
+    pn, psuffix = int(prev.rstrip(_LETTERS)), prev.lstrip(_DIGITS)
+    if n == pn + 1:
+        return not suffix
+    expected = chr(ord(psuffix) + 1) if psuffix else "a"
+    return n == pn and suffix == expected
+
+
 def parse_units(lines: list[Line]) -> list[Unit]:
     """State machine over the document lines producing structural units."""
     units: list[Unit] = []
     state = "preamble"
     chapter = ""
     current: Unit | None = None
-    pending_heading: str | None = None  # "chapter" | "section" | "article" | "annex": next line is its title
+    last_article: str | None = None
+    # "chapter" | "section" | "article" | "annex": next line is its title;
+    # "title": the title may continue on the next line (wrapped titles continue in lowercase)
+    pending_heading: str | None = None
 
     def close() -> None:
         nonlocal current
@@ -89,7 +110,10 @@ def parse_units(lines: list[Line]) -> list[Unit]:
         if state == "preamble":
             if _RECITALS_START.match(text):
                 state = "recitals"
-            continue
+                continue
+            if not _ENACTING_FIRST.match(text):
+                continue
+            state = "enacting"
 
         if state == "recitals":
             if _ENACTING_START.match(text):
@@ -124,6 +148,11 @@ def parse_units(lines: list[Line]) -> list[Unit]:
                 continue
             if kind in ("article", "annex") and current is not None:
                 current.title = text
+                pending_heading = "title"
+                continue
+            if kind == "title" and current is not None and text[:1].islower():
+                current.title = f"{current.title} {text}"
+                pending_heading = "title"
                 continue
 
         if _SIGNATURE.match(text):
@@ -146,8 +175,10 @@ def parse_units(lines: list[Line]) -> list[Unit]:
                 close()
                 pending_heading = "section"
                 continue
-            if m := _ARTICLE.match(text):
+            # A line that is just "Article N" can also be a wrapped cross-reference.
+            if (m := _ARTICLE.match(text)) and _follows(last_article, m.group(1)):
                 close()
+                last_article = m.group(1)
                 current = Unit("article", m.group(1), chapter=chapter, page_start=line.page)
                 pending_heading = "article"
                 continue
@@ -241,7 +272,7 @@ def chunk_units(units: list[Unit], info: ActInfo) -> list[Chunk]:
                 paragraphs=rng if len(pieces) > 1 else "",
                 part=part,
                 page_start=u.page_start,
-                url=info.url + anchor[u.unit_type],
+                url=info.url(u.unit_type) + anchor[u.unit_type],
                 text="",
             )
             header = chunk.label + (f" [{u.chapter}]" if u.chapter else "")
@@ -250,5 +281,10 @@ def chunk_units(units: list[Unit], info: ActInfo) -> list[Chunk]:
     return chunks
 
 
-def chunk_document(lines: list[Line], info: ActInfo) -> list[Chunk]:
-    return chunk_units(parse_units(lines), info)
+def merge_recitals(units: list[Unit], recital_source: list[Unit]) -> list[Unit]:
+    """Replace the recitals of `units` with those of another text of the same act.
+
+    Used for consolidated texts, which drop the preamble: recitals come from the OJ original.
+    """
+    recitals = [u for u in recital_source if u.unit_type == "recital"]
+    return recitals + [u for u in units if u.unit_type != "recital"]

@@ -10,12 +10,13 @@ import asyncio
 import logging
 import uuid
 from collections import Counter
+from pathlib import Path
 
 import yaml
 from qdrant_client import AsyncQdrantClient, models
 
 from eurag.config import get_settings
-from eurag.ingest.chunker import ActInfo, Chunk, chunk_document
+from eurag.ingest.chunker import ActInfo, Chunk, Unit, chunk_units, merge_recitals, parse_units
 from eurag.ingest.pdf_extract import extract_lines
 from eurag.ollama_client import OllamaClient
 
@@ -24,18 +25,29 @@ BATCH = 32
 _NS = uuid.UUID("6f1c1a52-6a2e-4e0a-9a0e-2f5b1b0c7e11")
 
 
+def load_act(data_dir: Path, filename: str, meta: dict) -> tuple[ActInfo, list[Unit]]:
+    """Parse one acts.yaml entry; `recitals` names the OJ original when the main text lacks them."""
+    meta = dict(meta)
+    recitals_file = meta.pop("recitals", None)
+    units = parse_units(extract_lines(data_dir / filename))
+    if recitals_file:
+        units = merge_recitals(units, parse_units(extract_lines(data_dir / recitals_file)))
+    return ActInfo(**meta), units
+
+
 def load_chunks() -> list[Chunk]:
     settings = get_settings()
     registry = yaml.safe_load((settings.data_dir / "acts.yaml").read_text())
     chunks: list[Chunk] = []
     for filename, meta in registry.items():
-        path = settings.data_dir / filename
-        if not path.exists():
-            log.warning("missing %s, skipping", path)
+        missing = [f for f in (filename, meta.get("recitals")) if f and not (settings.data_dir / f).exists()]
+        if missing:
+            log.warning("missing %s, skipping", ", ".join(missing))
             continue
-        doc_chunks = chunk_document(extract_lines(path), ActInfo(**meta))
-        units = Counter(c.unit_type for c in doc_chunks if c.part == 0)
-        log.info("%-20s %s -> %d chunks", meta["act"], dict(units), len(doc_chunks))
+        info, units = load_act(settings.data_dir, filename, meta)
+        doc_chunks = chunk_units(units, info)
+        counts = Counter(c.unit_type for c in doc_chunks if c.part == 0)
+        log.info("%-20s %s -> %d chunks", meta["act"], dict(counts), len(doc_chunks))
         chunks.extend(doc_chunks)
     return chunks
 
