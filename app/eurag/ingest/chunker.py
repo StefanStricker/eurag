@@ -8,6 +8,9 @@ from dataclasses import asdict, dataclass, field
 
 from eurag.ingest.pdf_extract import Line
 
+# Bump on any change to text extraction or chunking that alters the indexed chunks;
+# it is part of the ingest fingerprint and triggers a re-index.
+CHUNKER_VERSION = 2
 MAX_CHARS = 1800
 _LETTERS, _DIGITS = string.ascii_lowercase, string.digits
 _UNIT_NAMES = {"article": "Article", "recital": "Recital", "annex": "Annex"}
