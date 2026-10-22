@@ -1,0 +1,78 @@
+name: eurag
+
+x-app: &app
+  build: ./app
+  image: eurag-app
+  env_file: .env
+  environment:
+    OLLAMA_URL: http://ollama:11434
+    QDRANT_URL: http://qdrant:6333
+    DATA_DIR: /data
+  volumes:
+    - ./data:/data:ro
+
+services:
+  ollama:
+    image: ollama/ollama:0.34.4
+    volumes:
+      - ollama_models:/root/.ollama
+    environment:
+      OLLAMA_KEEP_ALIVE: 30m
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  ollama-init:
+    image: ollama/ollama:0.34.4
+    env_file: .env
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    entrypoint: ["sh", "-c", "ollama pull \"$$LLM_MODEL\" && ollama pull \"$$EMBED_MODEL\""]
+    depends_on:
+      ollama:
+        condition: service_healthy
+    restart: "no"
+
+  qdrant:
+    image: qdrant/qdrant:v1.19.1
+    volumes:
+      - qdrant_data:/qdrant/storage
+    ports:
+      - "${QDRANT_PORT:-6333}:6333"
+    healthcheck:
+      test: ["CMD", "bash", "-c", ":> /dev/tcp/127.0.0.1/6333"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  ingest:
+    <<: *app
+    command: ["python", "-m", "eurag.ingest.run"]
+    depends_on:
+      ollama-init:
+        condition: service_completed_successfully
+      qdrant:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    <<: *app
+    ports:
+      - "${API_PORT:-8000}:8000"
+    depends_on:
+      ingest:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+volumes:
+  ollama_models:
+  qdrant_data:

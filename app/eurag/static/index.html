@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EU-RAG</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --surface: #ffffff; --text: #1b1f24; --muted: #5d6673;
+    --border: #dde1e6; --accent: #1f4fbf; --accent-soft: #e8eefb; --chip: #eef0f3;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12151a; --surface: #1a1e25; --text: #e6e9ee; --muted: #9aa3b0;
+      --border: #2b313a; --accent: #7aa2ff; --accent-soft: #1f2a44; --chip: #242a33;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 15px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 860px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 24px; font-size: 14px; }
+  form { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+  textarea { width: 100%; min-height: 72px; resize: vertical; border: 0; outline: 0; background: transparent;
+             color: var(--text); font: inherit; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between;
+         border-top: 1px solid var(--border); padding-top: 10px; margin-top: 6px; }
+  .acts { display: flex; flex-wrap: wrap; gap: 6px; }
+  .acts label { background: var(--chip); border-radius: 999px; padding: 3px 10px; font-size: 13px; cursor: pointer;
+                user-select: none; }
+  .acts input { margin: 0 4px 0 0; vertical-align: -1px; }
+  button { background: var(--accent); color: #fff; border: 0; border-radius: 8px; padding: 8px 18px;
+           font: inherit; font-weight: 600; cursor: pointer; }
+  button:disabled { opacity: .5; cursor: default; }
+  #answer { margin-top: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+            padding: 18px 20px; display: none; }
+  #answer p { margin: 0 0 10px; }
+  #answer ul { margin: 0 0 10px; padding-left: 20px; }
+  a.cite { display: inline-block; min-width: 18px; padding: 0 4px; margin: 0 1px; border-radius: 4px; text-align: center;
+           background: var(--accent-soft); color: var(--accent); font-size: 12px; font-weight: 600;
+           text-decoration: none; vertical-align: 1px; }
+  h2 { font-size: 15px; margin: 28px 0 10px; color: var(--muted); font-weight: 600; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px;
+          margin-bottom: 10px; scroll-margin-top: 16px; }
+  .card.flash { outline: 2px solid var(--accent); }
+  .card header { display: flex; gap: 8px; align-items: baseline; justify-content: space-between; flex-wrap: wrap; }
+  .card .n { color: var(--accent); font-weight: 700; margin-right: 6px; }
+  .card a { color: var(--accent); font-weight: 600; text-decoration: none; }
+  .card a:hover { text-decoration: underline; }
+  .card .meta { color: var(--muted); font-size: 12px; }
+  .card .snippet { color: var(--muted); font-size: 13px; margin-top: 6px; white-space: pre-line; }
+  .note { color: var(--muted); font-size: 12px; margin-top: 28px; }
+  .error { color: #c62828; }
+  .cursor::after { content: "▍"; animation: blink 1s steps(1) infinite; color: var(--muted); }
+  @keyframes blink { 50% { opacity: 0; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>EU-RAG</h1>
+  <p class="sub">Ask questions about EU data law. Answers are generated locally and cite the relevant articles.</p>
+
+  <form id="form">
+    <textarea id="q" placeholder="e.g. What are the lawful bases for processing personal data?" required></textarea>
+    <div class="row">
+      <div class="acts" id="acts"></div>
+      <button id="go" type="submit">Ask</button>
+    </div>
+  </form>
+
+  <div id="answer"></div>
+  <div id="sources"></div>
+  <p class="note">Not legal advice. Always verify against the official text on EUR-Lex.</p>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+async function loadActs() {
+  try {
+    const acts = await (await fetch("/api/acts")).json();
+    $("acts").innerHTML = acts.map((a) =>
+      `<label title="${esc(a.title)}"><input type="checkbox" value="${esc(a.act)}">${esc(a.act)}</label>`).join("");
+  } catch { /* filters are optional */ }
+}
+
+function render(text) {
+  // Minimal markdown: paragraphs, bullet lists, bold; [n] -> citation links.
+  const lines = esc(text).split("\n");
+  let html = "", inList = false;
+  for (const raw of lines) {
+    const line = raw.trim();
+    const item = line.match(/^(?:[-*•]|\d+\.)\s+(.*)/);
+    if (item) {
+      if (!inList) { html += "<ul>"; inList = true; }
+      html += `<li>${item[1]}</li>`;
+      continue;
+    }
+    if (inList) { html += "</ul>"; inList = false; }
+    if (line) html += `<p>${line}</p>`;
+  }
+  if (inList) html += "</ul>";
+  return html
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\[(\d+)\]/g, '<a class="cite" href="#src-$1" data-n="$1">$1</a>');
+}
+
+function renderSources(citations) {
+  if (!citations.length) { $("sources").innerHTML = ""; return; }
+  $("sources").innerHTML = "<h2>Sources</h2>" + citations.map((c) => `
+    <div class="card" id="src-${c.id}">
+      <header>
+        <div><span class="n">[${c.id}]</span><a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.label)}</a></div>
+        <span class="meta">${esc(c.chapter || c.act_title)} · p. ${c.page}</span>
+      </header>
+      <div class="snippet">${esc(c.snippet)}</div>
+    </div>`).join("");
+}
+
+$("answer").addEventListener("click", (e) => {
+  const a = e.target.closest("a.cite");
+  const card = a && $("src-" + a.dataset.n);
+  if (!card) return;
+  e.preventDefault();
+  card.scrollIntoView({ behavior: "smooth", block: "center" });
+  card.classList.add("flash");
+  setTimeout(() => card.classList.remove("flash"), 1200);
+});
+
+$("q").addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) $("form").requestSubmit();
+});
+
+$("form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const question = $("q").value.trim();
+  if (!question) return;
+  const acts = [...document.querySelectorAll("#acts input:checked")].map((i) => i.value);
+  const out = $("answer");
+  $("go").disabled = true;
+  $("sources").innerHTML = "";
+  out.style.display = "block";
+  out.className = "cursor";
+  out.innerHTML = "<p>Searching the acts…</p>";
+
+  let text = "";
+  try {
+    const res = await fetch("/api/ask/stream", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question, acts: acts.length ? acts : null }),
+    });
+    if (!res.ok) throw new Error((await res.json()).detail || res.statusText);
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = "";
+    for (;;) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      let idx;
+      while ((idx = buf.indexOf("\n\n")) >= 0) {
+        const raw = buf.slice(0, idx);
+        buf = buf.slice(idx + 2);
+        const event = raw.match(/^event: (.*)$/m)?.[1];
+        const data = JSON.parse(raw.match(/^data: (.*)$/m)?.[1] ?? "null");
+        if (event === "token") {
+          text += data;
+          out.innerHTML = render(text);
+        } else if (event === "done") {
+          out.innerHTML = render(data.answer);
+          renderSources(data.citations);
+        } else if (event === "error") {
+          throw new Error(data);
+        }
+      }
+    }
+  } catch (err) {
+    out.innerHTML = `<p class="error">Error: ${esc(String(err.message || err))}</p>`;
+  } finally {
+    out.className = "";
+    $("go").disabled = false;
+  }
+});
+
+loadActs();
+</script>
+</body>
+</html>
