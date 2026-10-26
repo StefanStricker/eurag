@@ -229,6 +229,8 @@ def cmd_run(args) -> None:
         try:
             health = client.get("/api/health").json()
             acts = client.get("/api/acts").json()
+            resp = client.get("/api/config")
+            config = resp.json() if resp.status_code == 200 else None  # older APIs have no /api/config
         except httpx.HTTPError as exc:
             sys.exit(f"API not reachable at {args.api}: {exc}")
         if not health.get("ok"):
@@ -265,6 +267,7 @@ def cmd_run(args) -> None:
         "questions_sha256": hashlib.sha256(QUESTIONS.read_bytes()).hexdigest()[:12],
         "partial": len(questions) < len(all_questions),
         "health": health,
+        "config": config,
         "acts": acts,
         "results": results,
     }
@@ -304,6 +307,19 @@ def fmt_delta(m: Metric, base: float | None, new: float | None) -> str:
         return "±0"
     better = (d > 0) == m.higher_is_better
     return f"{d:+.0f} pp {'✅' if better else '🔻'}"
+
+
+def fmt_config(run: dict) -> str:
+    """Key settings of a run: top_k (run override or API default), num_ctx, prompt and index hashes."""
+    c = run.get("config") or {}
+    settings, index = c.get("settings", {}), c.get("index", {})
+    parts = [
+        f"k={k}" if (k := run.get("top_k") or settings.get("top_k")) else None,
+        f"ctx={settings['num_ctx']}" if "num_ctx" in settings else None,
+        f"prompt `{c['system_prompt_sha256'][:6]}`" if c.get("system_prompt_sha256") else None,
+        f"index `{index['fingerprint'][:6]}`" if index.get("fingerprint") else None,
+    ]
+    return ", ".join(p for p in parts if p) or "–"
 
 
 def fmt_units(units: list[tuple]) -> str:
@@ -368,11 +384,14 @@ def write_report(questions: list[dict]) -> None:
         w("")
 
     w("## Run history\n")
-    w("| Run | Label | Model | n | " + " | ".join(m.label for m in METRICS) + " | Latency | Max prompt tok | Errors |")
-    w("|---|---|---|---:|" + "---:|" * len(METRICS) + "---:|---:|---:|")
+    w("Config: top_k, num_ctx, short hashes of the system prompt and index fingerprint (from `/api/config`; "
+      "older runs predate it).\n")
+    w("| Run | Label | Model | Config | n | " + " | ".join(m.label for m in METRICS)
+      + " | Latency | Max prompt tok | Errors |")
+    w("|---|---|---|---|---:|" + "---:|" * len(METRICS) + "---:|---:|---:|")
     for r in runs:
         o = scored[r["run_id"]]["overall"]
-        w(f"| `{r['run_id']}` | {r.get('label') or ''} | {r.get('model') or ''} | {o['n']} | "
+        w(f"| `{r['run_id']}` | {r.get('label') or ''} | {r.get('model') or ''} | {fmt_config(r)} | {o['n']} | "
           + " | ".join(fmt(o[m.key]) for m in METRICS)
           + f" | {fmt(o['latency_s'], False)} s | {o['max_prompt_tokens'] or '–'} | {o['errors']} |")
     w("")

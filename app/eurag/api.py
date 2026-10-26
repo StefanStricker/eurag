@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 from collections import Counter
@@ -12,12 +13,24 @@ from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
 from qdrant_client import AsyncQdrantClient
 
+from eurag import retrieval
 from eurag.config import get_settings
-from eurag.generation import DeclineFilter, build_citations, build_messages, clean_citations, fit_context
+from eurag.generation import (
+    SYSTEM_PROMPT,
+    DeclineFilter,
+    build_citations,
+    build_messages,
+    clean_citations,
+    fit_context,
+)
 from eurag.ollama_client import OllamaClient
 from eurag.retrieval import Retriever
 
 STATIC_DIR = Path(__file__).parent / "static"
+_CONFIG_SETTINGS = ("llm_model", "embed_model", "embed_dim", "top_k", "num_ctx", "answer_tokens", "temperature",
+                    "chars_per_token")
+_RETRIEVAL_CONSTANTS = ("ARTICLE_BONUS", "EXPLICIT_SCORE", "EXPLICIT_MAX_PARTS", "RECITAL_EXPANSION_DEPTH",
+                        "RECITAL_EXPANSION_ARTICLES", "RECITAL_EXPANSION_MAX", "MAX_RANGE", "MAX_EXPLICIT_REFS")
 log = logging.getLogger("eurag.api")
 
 
@@ -149,13 +162,18 @@ async def acts(request: Request) -> list[dict]:
     """Acts in the index with unit counts; cached per physical collection, so a re-index invalidates it."""
     settings = request.app.state.settings
     qdrant: AsyncQdrantClient = request.app.state.qdrant
-    aliases = {a.alias_name: a.collection_name for a in (await qdrant.get_aliases()).aliases}
-    collection = aliases.get(settings.collection, settings.collection)
+    collection = await _live_collection(qdrant, settings.collection)
     cache: dict[str, list[dict]] = request.app.state.acts_cache
     if collection not in cache:
         cache.clear()
         cache[collection] = await _count_acts(qdrant, collection)
     return cache[collection]
+
+
+async def _live_collection(qdrant: AsyncQdrantClient, alias: str) -> str:
+    """The physical collection behind the alias (the alias name itself for a pre-alias index)."""
+    aliases = {a.alias_name: a.collection_name for a in (await qdrant.get_aliases()).aliases}
+    return aliases.get(alias, alias)
 
 
 async def _count_acts(qdrant: AsyncQdrantClient, collection: str) -> list[dict]:
@@ -182,6 +200,27 @@ async def _count_acts(qdrant: AsyncQdrantClient, collection: str) -> list[dict]:
         }
         for act, title in titles.items()
     ]
+
+
+@app.get("/api/config")
+async def config(request: Request) -> dict:
+    """Effective settings that shape answers, so an eval run can be tied to the exact configuration."""
+    settings = request.app.state.settings
+    qdrant: AsyncQdrantClient = request.app.state.qdrant
+    collection = await _live_collection(qdrant, settings.collection)
+    metadata = (await qdrant.get_collection(collection)).config.metadata or {}
+    return {
+        "settings": {name: getattr(settings, name) for name in _CONFIG_SETTINGS},
+        "retrieval": {name.lower(): getattr(retrieval, name) for name in _RETRIEVAL_CONSTANTS},
+        "system_prompt_sha256": hashlib.sha256(SYSTEM_PROMPT.encode()).hexdigest()[:12],
+        "index": {
+            "alias": settings.collection,
+            "collection": collection,
+            "fingerprint": (metadata.get("fingerprint") or "")[:12] or None,
+            "chunker_version": metadata.get("chunker_version"),
+            "embed_model": metadata.get("embed_model"),
+        },
+    }
 
 
 @app.get("/api/health")

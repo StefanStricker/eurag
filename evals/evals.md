@@ -23,20 +23,22 @@ Citations are matched at unit level (act + article/annex number); paragraphs are
 | Metric | Baseline | Latest | Δ |
 |---|---:|---:|---:|
 | Hit | 93% | 93% | ±0 |
-| Recall | 85% | 85% | ±0 |
+| Recall | 84% | 84% | ±0 |
 | Precision | 74% | 75% | +1 pp ✅ |
 | Act cov. | 98% | 98% | ±0 |
-| Mentioned | 16% | 16% | ±0 |
+| Mentioned | 15% | 15% | ±0 |
 | False decl. | 0% | 2% | +2 pp 🔻 |
 | Declined | 100% | 100% | ±0 |
 | Mean latency | 3.5 s | 3.6 s | |
 
 ## Run history
 
-| Run | Label | Model | n | Hit | Recall | Precision | Act cov. | Mentioned | False decl. | Declined | Latency | Max prompt tok | Errors |
-|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| `20261019-143222_baseline` | baseline | qwen2.5:7b-instruct | 50 | 93% | 85% | 74% | 98% | 16% | 0% | 100% | 3.5 s | – | 0 |
-| `20261021-080302_context-budget` | context-budget | qwen2.5:7b-instruct | 50 | 93% | 85% | 75% | 98% | 16% | 2% | 100% | 3.6 s | 3784 | 0 |
+Config: top_k, num_ctx, short hashes of the system prompt and index fingerprint (from `/api/config`; older runs predate it).
+
+| Run | Label | Model | Config | n | Hit | Recall | Precision | Act cov. | Mentioned | False decl. | Declined | Latency | Max prompt tok | Errors |
+|---|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| `20261019-143222_baseline` | baseline | qwen2.5:7b-instruct | – | 50 | 93% | 84% | 74% | 98% | 15% | 0% | 100% | 3.5 s | – | 0 |
+| `20261021-080302_context-budget` | context-budget | qwen2.5:7b-instruct | – | 50 | 93% | 84% | 75% | 98% | 15% | 2% | 100% | 3.6 s | 3784 | 0 |
 
 ## Latest run by category
 
@@ -47,7 +49,7 @@ Citations are matched at unit level (act + article/annex number); paragraphs are
 | Data Act | 8 | 100% | 94% | 69% | 100% | 0% | 12% | – | 4.3 s |
 | Data Governance Act | 7 | 100% | 86% | 89% | 100% | 14% | 0% | – | 4.3 s |
 | ePrivacy Directive | 5 | 80% | 80% | 80% | 100% | 20% | 0% | – | 3.2 s |
-| cross-document | 6 | 100% | 67% | 60% | 100% | 8% | 0% | – | 4.6 s |
+| cross-document | 6 | 100% | 58% | 60% | 100% | 0% | 0% | – | 4.6 s |
 | out-of-scope | 4 | – | – | – | – | – | – | 100% | 1.6 s |
 
 ## Latest run by question
@@ -97,7 +99,7 @@ Citations are matched at unit level (act + article/annex number); paragraphs are
 | `xdoc-01` | ✅ hit | 50% | 25% | GDPR Art. 95, ePrivacy Directive Art. 1 | GDPR Art. 1, GDPR Art. 2, GDPR Recital 173, ePrivacy Directive Art. 1, ePrivacy Directive Art. 15, ePrivacy Directive Recital 4, ePrivacy Directive Recital 10, ePrivacy Directive Recital 11, ePrivacy Directive Recital 12 | 4.8 s |
 | `xdoc-02` | ✅ hit | 100% | 50% | Data Act Art. 1 | Data Act Art. 1, Data Governance Act Art. 1 | 1.5 s |
 | `xdoc-03` | ✅ hit | 100% | 43% | Data Act Art. 4, Data Act Art. 5, GDPR Art. 20 | Data Act Art. 1, Data Act Art. 4, Data Act Art. 5, Data Act Art. 6, Data Act Recital 35, GDPR Art. 13, GDPR Art. 15, GDPR Art. 20, GDPR Recital 68 | 5.7 s |
-| `xdoc-04` | ✅ hit | 50% | 100% | AI Act Art. 2, AI Act Art. 10 | AI Act Art. 10, AI Act Recital 10 | 4.0 s |
+| `xdoc-04` | ✅ hit | 0% | 100% | AI Act Art. 2, AI Act Art. 4A, AI Act Art. 10 | AI Act Art. 10, AI Act Recital 10 | 4.0 s |
 | `xdoc-05` | ✅ hit | 100% | 67% | AI Act Art. 99, GDPR Art. 83 | AI Act Art. 99, AI Act Art. 101, GDPR Art. 83 | 6.6 s |
 | `xdoc-06` | ✅ hit | 0% | 75% | Data Act Art. 14, Data Act Art. 15, Data Act Art. 16, Data Act Art. 17, Data Act Art. 18, Data Act Art. 19, Data Act Art. 20, Data Act Art. 21, Data Act Art. 22, Data Governance Act Art. 3, Data Governance Act Art. 4, Data Governance Act Art. 5, Data Governance Act Art. 6, Data Governance Act Art. 7, Data Governance Act Art. 8, Data Governance Act Art. 9 | Data Act Art. 17, Data Act Art. 19, Data Act Art. 21, Data Governance Act Art. 2 | 4.9 s |
 | `neg-01` | ✅ declined | – | – | – | AI Act Art. 50, AI Act Art. 78, AI Act Recital 136, Data Governance Act Art. 1, Data Governance Act Art. 3, Data Governance Act Art. 12, Data Governance Act Recital 29, GDPR Art. 23 | 1.6 s |
@@ -830,7 +832,7 @@ Citations are matched at unit level (act + article/annex number); paragraphs are
 
 <details><summary><code>xdoc-04</code> How does the GDPR apply to high-risk AI systems that process personal data?</summary>
 
-*Note:* Answer should also draw on the GDPR (no specific article given).
+*Note:* Answer should also draw on the GDPR (no specific article given). Special-category data for bias detection moved from Art. 10(5) to Art. 4a with the Digital Omnibus on AI (Regulation (EU) 2026/1744).
 
 > [1] Article 10(5) of the AI Act allows for the exceptional processing of special categories of personal data in high-risk AI systems to detect and correct biases, provided that certain conditions are met. These conditions include technical limitations on re-use, state-of-the-art security measures, and strict controls over access to the data. This aligns with the GDPR's principles of data protection, particularly the need to ensure the security of personal data (Article 5(1)(f) GDPR) and the necessity to process data only for specified, explicit, and legitimate purposes (Article 6(1)(a) GDPR).
 >
