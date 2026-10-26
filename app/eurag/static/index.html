@@ -52,6 +52,9 @@
   .card .snippet { color: var(--muted); font-size: 13px; margin-top: 6px; white-space: pre-line; }
   .note { color: var(--muted); font-size: 12px; margin-top: 28px; }
   .error { color: #c62828; }
+  #answer.declined { border-style: dashed; color: var(--muted); }
+  #answer .decline-label { color: var(--text); font-weight: 600; font-size: 13px; text-transform: uppercase;
+                           letter-spacing: .04em; margin-bottom: 6px; }
   .cursor::after { content: "▍"; animation: blink 1s steps(1) infinite; color: var(--muted); }
   @keyframes blink { 50% { opacity: 0; } }
 </style>
@@ -171,8 +174,14 @@ $("form").addEventListener("submit", async (e) => {
           text += data;
           out.innerHTML = render(text);
         } else if (event === "done") {
-          out.innerHTML = render(data.answer);
-          renderSources(data.citations);
+          if (data.declined) {
+            out.classList.add("declined");
+            out.innerHTML = '<p class="decline-label">Not covered by the indexed acts</p>' + render(data.answer);
+            renderSources([]);
+          } else {
+            out.innerHTML = render(data.answer);
+            renderSources(data.citations);
+          }
         } else if (event === "error") {
           throw new Error(data);
         }
@@ -181,7 +190,7 @@ $("form").addEventListener("submit", async (e) => {
   } catch (err) {
     out.innerHTML = `<p class="error">Error: ${esc(String(err.message || err))}</p>`;
   } finally {
-    out.className = "";
+    out.classList.remove("cursor");
     $("go").disabled = false;
   }
 });

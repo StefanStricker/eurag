@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 from qdrant_client import AsyncQdrantClient
 
 from eurag.config import get_settings
-from eurag.generation import build_citations, build_messages, clean_citations, fit_context
+from eurag.generation import DeclineFilter, build_citations, build_messages, clean_citations, fit_context
 from eurag.ollama_client import OllamaClient
 from eurag.retrieval import Retriever
 
@@ -62,6 +62,7 @@ class Citation(BaseModel):
 class AskResponse(BaseModel):
     answer: str
     citations: list[Citation]
+    declined: bool = Field(description="The model found no answer in the sources; citations are empty")
     model: str
     prompt_tokens: int | None = None
 
@@ -80,10 +81,11 @@ async def _retrieve(request: Request, body: AskRequest):
 async def ask(body: AskRequest, request: Request) -> AskResponse:
     hits = await _retrieve(request, body)
     raw, prompt_tokens = await request.app.state.ollama.chat(build_messages(body.question, hits))
-    answer, cited = clean_citations(raw, len(hits))
+    answer, cited, declined = clean_citations(raw, len(hits))
     return AskResponse(
         answer=answer,
         citations=[Citation(**c) for c in build_citations(hits, cited)],
+        declined=declined,
         model=request.app.state.settings.llm_model,
         prompt_tokens=prompt_tokens,
     )
@@ -95,24 +97,36 @@ def _sse(event: str, data: object) -> str:
 
 @app.post("/api/ask/stream")
 async def ask_stream(body: AskRequest, request: Request) -> StreamingResponse:
-    """Server-sent events: `token` events, then one `done` event with the cleaned answer and citations."""
+    """Server-sent events: `token` events, then one `done` event with the cleaned answer, citations and `declined`.
+
+    Tokens are held back until the decline marker is ruled out, so it never reaches the client.
+    """
     hits = await _retrieve(request, body)
     ollama: OllamaClient = request.app.state.ollama
 
     async def events():
         parts: list[str] = []
         stats: dict = {}
+        decline_filter = DeclineFilter()
         try:
             async for token in ollama.chat_stream(build_messages(body.question, hits), stats):
                 parts.append(token)
-                yield _sse("token", token)
+                if text := decline_filter.feed(token):
+                    yield _sse("token", text)
+            if text := decline_filter.flush():
+                yield _sse("token", text)
         except Exception as exc:  # surface LLM errors to the client instead of dropping the stream
             yield _sse("error", str(exc))
             return
-        answer, cited = clean_citations("".join(parts), len(hits))
+        answer, cited, declined = clean_citations("".join(parts), len(hits))
         yield _sse(
             "done",
-            {"answer": answer, "citations": build_citations(hits, cited), "prompt_tokens": stats.get("prompt_tokens")},
+            {
+                "answer": answer,
+                "citations": build_citations(hits, cited),
+                "declined": declined,
+                "prompt_tokens": stats.get("prompt_tokens"),
+            },
         )
 
     return StreamingResponse(events(), media_type="text/event-stream", headers={"Cache-Control": "no-cache"})

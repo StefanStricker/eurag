@@ -71,7 +71,8 @@ def cited_units(r: dict) -> set[tuple]:
 
 
 def is_decline(r: dict) -> bool:
-    return r.get("status") == 404 or bool(_DECLINE.search(r.get("answer", "")))
+    # Runs before the `declined` flag existed only have the answer text to go by.
+    return r.get("status") == 404 or bool(r.get("declined")) or bool(_DECLINE.search(r.get("answer", "")))
 
 
 def _mention_pattern(unit: str, number: str) -> re.Pattern:
@@ -192,6 +193,7 @@ def ask(client: httpx.Client, q: dict, top_k: int | None) -> dict:
         result |= {
             "answer": data["answer"],
             "citations": data["citations"],
+            "declined": data.get("declined"),
             "model": data.get("model"),
             "prompt_tokens": data.get("prompt_tokens"),
         }

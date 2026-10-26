@@ -1,5 +1,13 @@
 from eurag.config import Settings
-from eurag.generation import SYSTEM_PROMPT, build_citations, build_messages, clean_citations, fit_context
+from eurag.generation import (
+    DECLINE_FALLBACK,
+    SYSTEM_PROMPT,
+    DeclineFilter,
+    build_citations,
+    build_messages,
+    clean_citations,
+    fit_context,
+)
 from eurag.retrieval import Hit, covers_paragraph, explicit_refs, mentioned_acts
 
 
@@ -15,15 +23,47 @@ def _hit(n: str, size: int = 0) -> Hit:
 
 
 def test_clean_citations_drops_invalid_refs():
-    answer, cited = clean_citations("Consent is a basis [1][3]. Also [7] and [2].", n_sources=3)
-    assert answer == "Consent is a basis [1][3]. Also  and [2]."
+    answer, cited, declined = clean_citations("Consent is a basis [1][3]. Also [7] and [2].", n_sources=3)
+    assert answer == "Consent is a basis [1][3]. Also and [2]."
     assert cited == [1, 2, 3]
+    assert not declined
 
 
-def test_build_citations_only_cited_or_all():
+def test_clean_citations_fixes_spacing_left_by_removed_markers():
+    answer, _, _ = clean_citations("It applies [9] . See Article 6 [8], too.\n  - nested [1]", n_sources=1)
+    assert answer == "It applies. See Article 6, too.\n  - nested [1]"
+
+
+def test_clean_citations_decline():
+    answer, cited, declined = clean_citations("NOT_COVERED: The sources do not cover tax law [2].", n_sources=3)
+    assert (answer, cited, declined) == ("The sources do not cover tax law.", [], True)
+    assert clean_citations("**NOT_COVERED**\n\nNothing on this.", 3)[::2] == ("Nothing on this.", True)
+    assert clean_citations(" NOT_COVERED ", 3) == (DECLINE_FALLBACK, [], True)
+    # Only a leading marker counts as a decline.
+    assert clean_citations("Consent [1]. NOT_COVERED", 3)[2] is False
+
+
+def _stream(tokens: list[str]) -> tuple[str, bool]:
+    f = DeclineFilter()
+    out = "".join(f.feed(t) for t in tokens) + f.flush()
+    return out, f.declined
+
+
+def test_decline_filter_hides_marker():
+    assert _stream(["NOT", "_CO", "VERED", ":", " The sources", " lack this."]) == ("The sources lack this.", True)
+    assert _stream(["**NOT_COVERED**", "\n\n", "Missing."]) == ("Missing.", True)
+
+
+def test_decline_filter_passes_normal_answers():
+    assert _stream(["Consent", " is required [1]."]) == ("Consent is required [1].", False)
+    assert _stream(["NO", "T every case [1]."]) == ("NOT every case [1].", False)
+    assert _stream(["No"]) == ("No", False)
+
+
+def test_build_citations_only_cited():
     hits = [_hit("5"), _hit("6"), _hit("7")]
     assert [c["number"] for c in build_citations(hits, [2])] == ["6"]
-    assert [c["id"] for c in build_citations(hits, [])] == [1, 2, 3]
+    assert build_citations(hits, []) == []
 
 
 def test_build_messages_numbers_sources():
@@ -110,11 +150,11 @@ def test_fit_context_always_keeps_first_hit():
 
 
 def test_clean_citations_collapses_repeats_and_citation_only_lines():
-    answer, cited = clean_citations("[1][3]\n\n- Consent [2][2] [2].\n- Contract [1].", n_sources=3)
+    answer, cited, _ = clean_citations("[1][3]\n\n- Consent [2][2] [2].\n- Contract [1].", n_sources=3)
     assert answer == "- Consent [2].\n- Contract [1]."
     assert cited == [1, 2, 3]
 
 
 def test_clean_citations_dedupes_non_adjacent_repeats_in_run():
-    answer, _ = clean_citations("Vital interests [2][1][2].", n_sources=3)
+    answer, _, _ = clean_citations("Vital interests [2][1][2].", n_sources=3)
     assert answer == "Vital interests [2][1]."
