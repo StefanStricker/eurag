@@ -6,8 +6,9 @@ from collections import Counter
 from contextlib import asynccontextmanager
 from pathlib import Path
 
+import httpx
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
 from qdrant_client import AsyncQdrantClient
 
@@ -29,12 +30,20 @@ async def lifespan(app: FastAPI):
     app.state.qdrant = AsyncQdrantClient(url=settings.qdrant_url)
     app.state.ollama = OllamaClient(settings)
     app.state.retriever = Retriever(settings, app.state.qdrant, app.state.ollama)
+    app.state.acts_cache = {}  # physical collection -> /api/acts result
     yield
     await app.state.ollama.aclose()
     await app.state.qdrant.close()
 
 
 app = FastAPI(title="EU-RAG", description="Question answering over EU data law with citations", lifespan=lifespan)
+
+
+@app.exception_handler(httpx.HTTPError)
+async def llm_unavailable(request: Request, exc: httpx.HTTPError) -> JSONResponse:
+    """Only Ollama calls raise raw httpx errors (qdrant-client wraps its own), so this means the LLM failed."""
+    log.warning("Ollama request failed: %r", exc)
+    return JSONResponse(status_code=502, content={"detail": f"LLM unavailable: {exc!r}"})
 
 
 class AskRequest(BaseModel):
@@ -115,7 +124,10 @@ async def ask_stream(body: AskRequest, request: Request) -> StreamingResponse:
                     yield _sse("token", text)
             if text := decline_filter.flush():
                 yield _sse("token", text)
-        except Exception as exc:  # surface LLM errors to the client instead of dropping the stream
+        except httpx.HTTPError as exc:  # the response has started, so report it as an event instead of a 502
+            yield _sse("error", f"LLM unavailable: {exc!r}")
+            return
+        except Exception as exc:  # surface other errors to the client instead of dropping the stream
             yield _sse("error", str(exc))
             return
         answer, cited, declined = clean_citations("".join(parts), len(hits))
@@ -134,14 +146,25 @@ async def ask_stream(body: AskRequest, request: Request) -> StreamingResponse:
 
 @app.get("/api/acts")
 async def acts(request: Request) -> list[dict]:
+    """Acts in the index with unit counts; cached per physical collection, so a re-index invalidates it."""
     settings = request.app.state.settings
     qdrant: AsyncQdrantClient = request.app.state.qdrant
+    aliases = {a.alias_name: a.collection_name for a in (await qdrant.get_aliases()).aliases}
+    collection = aliases.get(settings.collection, settings.collection)
+    cache: dict[str, list[dict]] = request.app.state.acts_cache
+    if collection not in cache:
+        cache.clear()
+        cache[collection] = await _count_acts(qdrant, collection)
+    return cache[collection]
+
+
+async def _count_acts(qdrant: AsyncQdrantClient, collection: str) -> list[dict]:
     counts: Counter[tuple[str, str]] = Counter()
     titles: dict[str, str] = {}
     offset = None
     while True:
         points, offset = await qdrant.scroll(
-            settings.collection, limit=1000, offset=offset, with_payload=["act", "act_title", "unit_type", "part"]
+            collection, limit=1000, offset=offset, with_payload=["act", "act_title", "unit_type", "part"]
         )
         for p in points:
             titles[p.payload["act"]] = p.payload["act_title"]

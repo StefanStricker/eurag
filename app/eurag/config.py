@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     collection: str = "eu_acts"
     data_dir: Path = Path("/data")
     top_k: int = 8
-    num_ctx: int = 16384
+    num_ctx: int = 8192
     answer_tokens: int = 1024  # reserved for the answer (num_predict)
     chars_per_token: float = 3.5  # conservative estimate for English legal text
     temperature: float = 0.1

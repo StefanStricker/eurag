@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import re
 from dataclasses import dataclass
 
@@ -186,10 +187,11 @@ class Retriever:
             explicit += await self._lookup_unit(act, unit_type, number, paragraph, vector)
 
         # Articles found via a recital are placed right after it, so the model reads them together.
+        recitals = [h for h in hits[:RECITAL_EXPANSION_DEPTH] if h.payload["unit_type"] == "recital"]
+        found = await asyncio.gather(*(self._articles_for_recital(r) for r in recitals))
         expansions: dict[tuple, list[Hit]] = {}
         budget = RECITAL_EXPANSION_MAX
-        for recital in [h for h in hits[:RECITAL_EXPANSION_DEPTH] if h.payload["unit_type"] == "recital"]:
-            related = await self._articles_for_recital(recital)
+        for recital, related in zip(recitals, found):  # budget in rank order
             expansions[recital.key] = related[: max(budget, 0)]
             budget -= len(related)
 
