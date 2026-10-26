@@ -27,7 +27,16 @@ ACT_ALIASES = {
     "Data Governance Act": r"\bdga\b|data governance act|2022/868",
     "ePrivacy Directive": r"e-?privacy|2002/58",
 }
-_ARTICLE_REF = re.compile(r"\bart(?:icle|\.)?\s*(\d+[a-z]?)\b(?:\s*\((\d+)\))?", re.I)
+# "Article 6(1)", "Articles 13 and 14", "Art. 13, 14 and 15", "Articles 13-15"; "Annex III", "Annexes I to III".
+_SEP = r"\s*(?:,|and|or|to|-|–)\s*"
+_ARTICLE_ITEM = r"\d+[a-z]?\b(?:\s*\(\d+\))?"
+_ANNEX_ITEM = r"[IVXLC]+\b"
+_ARTICLE_REF = re.compile(rf"\b(?:articles?|arts?\.?)\s*({_ARTICLE_ITEM}(?:{_SEP}{_ARTICLE_ITEM})*)", re.I)
+_ANNEX_REF = re.compile(rf"\bannex(?:es)?\s+({_ANNEX_ITEM}(?:{_SEP}{_ANNEX_ITEM})*)", re.I)
+_ITEM = re.compile(r"(\d+[a-z]?|[IVXLC]+\b)(?:\s*\((\d+)\))?|(to|-|–)", re.I)
+_ROMAN = {"I": 1, "V": 5, "X": 10, "L": 50, "C": 100}
+MAX_RANGE = 10  # longer ranges ("Articles 1-99") keep only their two ends
+MAX_EXPLICIT_REFS = 6  # units fetched directly per question
 
 
 @dataclass
@@ -47,15 +56,55 @@ def mentioned_acts(question: str) -> list[str]:
     return [act for act, pattern in ACT_ALIASES.items() if re.search(pattern, q)]
 
 
-def explicit_article_refs(question: str, acts: list[str] | None) -> list[tuple[str, str, str | None]]:
-    """(act, article number, paragraph or None) triples the question references unambiguously."""
-    refs = _ARTICLE_REF.findall(question)
-    if not refs:
+def _roman_to_int(numeral: str) -> int:
+    values = [_ROMAN[c] for c in numeral]
+    return sum(-v if v < nxt else v for v, nxt in zip(values, values[1:] + [0]))
+
+
+def _int_to_roman(n: int) -> str:
+    out = ""
+    numerals = ((100, "C"), (90, "XC"), (50, "L"), (40, "XL"), (10, "X"), (9, "IX"), (5, "V"), (4, "IV"), (1, "I"))
+    for value, numeral in numerals:
+        count, n = divmod(n, value)
+        out += numeral * count
+    return out
+
+
+def _expand_items(items: str, unit_type: str) -> list[tuple[str, str | None]]:
+    """(number, paragraph or None) pairs of a reference list; ranges between plain numbers are expanded."""
+    out: list[tuple[str, str | None]] = []
+    is_range = False
+    for number, para, range_marker in _ITEM.findall(items):
+        if range_marker:
+            is_range = True
+            continue
+        number = number.upper() if unit_type == "annex" else number.lower()
+        if is_range and out and out[-1][1] is None and not para:
+            to_int = _roman_to_int if unit_type == "annex" else (lambda s: int(s) if s.isdigit() else None)
+            lo, hi = to_int(out[-1][0]), to_int(number)
+            if lo is not None and hi is not None and 0 < hi - lo <= MAX_RANGE:
+                fmt = _int_to_roman if unit_type == "annex" else str
+                out += [(fmt(n), None) for n in range(lo + 1, hi)]
+        out.append((number, para or None))
+        is_range = False
+    return out
+
+
+def explicit_refs(question: str, acts: list[str] | None) -> list[tuple[str, str, str, str | None]]:
+    """(act, unit type, number, paragraph or None) tuples the question references unambiguously."""
+    matches = [(m.start(), "article", m.group(1)) for m in _ARTICLE_REF.finditer(question)]
+    matches += [(m.start(), "annex", m.group(1)) for m in _ANNEX_REF.finditer(question)]
+    if not matches:
         return []
     named = mentioned_acts(question) or (acts or [])
     if len(named) != 1:
         return []
-    return [(named[0], number, para or None) for number, para in dict.fromkeys(refs)]
+    refs = [
+        (named[0], unit_type, number, para)
+        for _, unit_type, items in sorted(matches)
+        for number, para in _expand_items(items, unit_type)
+    ]
+    return list(dict.fromkeys(refs))[:MAX_EXPLICIT_REFS]
 
 
 def covers_paragraph(paragraphs: str, paragraph: str) -> bool:
@@ -78,22 +127,24 @@ class Retriever:
         self.qdrant = qdrant
         self.ollama = ollama
 
-    async def _lookup_article(self, act: str, number: str, paragraph: str | None, vector: list[float]) -> list[Hit]:
-        """Parts of an explicitly named article: those covering `paragraph`, else the ones closest to the question."""
-        article = models.Filter(
+    async def _lookup_unit(
+        self, act: str, unit_type: str, number: str, paragraph: str | None, vector: list[float]
+    ) -> list[Hit]:
+        """Parts of a named article or annex: those covering `paragraph`, else the ones closest to the question."""
+        unit = models.Filter(
             must=[
                 models.FieldCondition(key="act", match=models.MatchValue(value=act)),
-                models.FieldCondition(key="unit_type", match=models.MatchValue(value="article")),
+                models.FieldCondition(key="unit_type", match=models.MatchValue(value=unit_type)),
                 models.FieldCondition(key="number", match=models.MatchValue(value=number)),
             ]
         )
         points = []
         if paragraph:
-            points, _ = await self.qdrant.scroll(self.settings.collection, scroll_filter=article, limit=50)
+            points, _ = await self.qdrant.scroll(self.settings.collection, scroll_filter=unit, limit=50)
             points = [p for p in points if covers_paragraph(p.payload["paragraphs"], paragraph)]
         if not points:
             result = await self.qdrant.query_points(
-                self.settings.collection, query=vector, query_filter=article, limit=EXPLICIT_MAX_PARTS, with_payload=True
+                self.settings.collection, query=vector, query_filter=unit, limit=EXPLICIT_MAX_PARTS, with_payload=True
             )
             points = result.points
         points.sort(key=lambda p: p.payload["part"])
@@ -131,8 +182,8 @@ class Retriever:
         hits.sort(key=lambda h: h.score, reverse=True)
 
         explicit: list[Hit] = []
-        for act, number, paragraph in explicit_article_refs(question, acts):
-            explicit += await self._lookup_article(act, number, paragraph, vector)
+        for act, unit_type, number, paragraph in explicit_refs(question, acts):
+            explicit += await self._lookup_unit(act, unit_type, number, paragraph, vector)
 
         # Articles found via a recital are placed right after it, so the model reads them together.
         expansions: dict[tuple, list[Hit]] = {}

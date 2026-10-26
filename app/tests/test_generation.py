@@ -1,6 +1,6 @@
 from eurag.config import Settings
 from eurag.generation import SYSTEM_PROMPT, build_citations, build_messages, clean_citations, fit_context
-from eurag.retrieval import Hit, covers_paragraph, explicit_article_refs, mentioned_acts
+from eurag.retrieval import Hit, covers_paragraph, explicit_refs, mentioned_acts
 
 
 def _hit(n: str, size: int = 0) -> Hit:
@@ -38,21 +38,46 @@ def test_act_detection():
     assert mentioned_acts("GDPR vs AI Act") == ["GDPR", "AI Act"]
 
 
-def test_explicit_article_refs():
-    assert explicit_article_refs("What does Article 6 GDPR say?", None) == [("GDPR", "6", None)]
-    assert explicit_article_refs("Explain Art. 5 and Article 50", ["AI Act"]) == [
-        ("AI Act", "5", None),
-        ("AI Act", "50", None),
+def test_explicit_refs():
+    assert explicit_refs("What does Article 6 GDPR say?", None) == [("GDPR", "article", "6", None)]
+    assert explicit_refs("Explain Art. 5 and Article 50", ["AI Act"]) == [
+        ("AI Act", "article", "5", None),
+        ("AI Act", "article", "50", None),
     ]
-    assert explicit_article_refs("Article 5 of GDPR or AI Act?", None) == []
+    assert explicit_refs("Article 5 of GDPR or AI Act?", None) == []
+    assert explicit_refs("What changed in Article 4a AI Act?", None) == [("AI Act", "article", "4a", None)]
 
 
-def test_explicit_article_refs_with_paragraph():
-    assert explicit_article_refs("What does Article 6(1) GDPR say?", None) == [("GDPR", "6", "1")]
-    assert explicit_article_refs("Art. 5 (3) ePrivacy and Article 5", None) == [
-        ("ePrivacy Directive", "5", "3"),
-        ("ePrivacy Directive", "5", None),
+def test_explicit_refs_with_paragraph():
+    assert explicit_refs("What does Article 6(1) GDPR say?", None) == [("GDPR", "article", "6", "1")]
+    assert explicit_refs("Art. 5 (3) ePrivacy and Article 5", None) == [
+        ("ePrivacy Directive", "article", "5", "3"),
+        ("ePrivacy Directive", "article", "5", None),
     ]
+
+
+def test_explicit_refs_lists_and_ranges():
+    numbers = lambda q: [(n, p) for _, _, n, p in explicit_refs(q, ["GDPR"])]
+    assert numbers("What do Articles 13 and 14 require?") == [("13", None), ("14", None)]
+    assert numbers("Art. 13, 14 and 15") == [("13", None), ("14", None), ("15", None)]
+    assert numbers("Articles 6(1) or 9(2)") == [("6", "1"), ("9", "2")]
+    assert numbers("Articles 15-17") == [("15", None), ("16", None), ("17", None)]
+    assert numbers("Articles 12 to 14") == [("12", None), ("13", None), ("14", None)]
+    assert numbers("Articles 1-99") == [("1", None), ("99", None)]
+    assert len(numbers("Articles 12-22")) == 6
+    assert numbers("Since 2018, under Article 17 and 2016 rules") == [("17", None), ("2016", None)]
+
+
+def test_explicit_refs_annexes():
+    assert explicit_refs("What does Annex III AI Act cover?", None) == [("AI Act", "annex", "III", None)]
+    assert explicit_refs("Annexes I to IV AI Act", None) == [
+        ("AI Act", "annex", n, None) for n in ("I", "II", "III", "IV")
+    ]
+    assert explicit_refs("Article 6 and annex iii of the AI Act", None) == [
+        ("AI Act", "article", "6", None),
+        ("AI Act", "annex", "III", None),
+    ]
+    assert explicit_refs("Annex III", None) == []
 
 
 def test_covers_paragraph():
