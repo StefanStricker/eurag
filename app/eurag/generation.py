@@ -26,7 +26,9 @@ part normally and say what is not covered.
 DECLINE_MARKER = "NOT_COVERED"
 DECLINE_FALLBACK = "The indexed acts do not cover this question."
 
-_DECLINE = re.compile(rf"^[\s*_]*{DECLINE_MARKER}[\s*_]*[:.\-–]?\s*", re.I)
+# Bullets and citation runs the model sometimes puts before the marker ("- NOT_COVERED", "[1] NOT_COVERED").
+_LEAD = re.compile(r"^(?:[\s*_\-•+]|\[\d+\])*")
+_DECLINE = re.compile(rf"{_LEAD.pattern}{DECLINE_MARKER}[\s*_]*[:.\-–]?\s*", re.I)
 _CITATION = re.compile(r"\[(\d+)\]")
 _CITATION_RUN = re.compile(r"\[\d+\](?:\s*\[\d+\])*")
 _CITATION_ONLY_LINE = re.compile(r"^\s*(?:\[\d+\]\s*)+$\n?", re.M)
@@ -116,8 +118,8 @@ class DeclineFilter:
                 self._strip_next = not token
             return token
         self._buffer += token
-        lead = self._buffer.lstrip(" \t\n*_").upper()
-        if len(lead) < len(DECLINE_MARKER) and DECLINE_MARKER.startswith(lead):
+        lead = _LEAD.sub("", self._buffer).upper()
+        if (len(lead) < len(DECLINE_MARKER) and DECLINE_MARKER.startswith(lead)) or re.fullmatch(r"\[\d*", lead):
             return ""
         self._decided = True
         if m := _DECLINE.match(self._buffer):
@@ -155,3 +157,24 @@ def citation_payload(n: int, hit: Hit) -> dict:
 def build_citations(hits: list[Hit], cited: list[int]) -> list[dict]:
     """Citations for the sources the answer actually used."""
     return [citation_payload(n, hits[n - 1]) for n in cited]
+
+
+def debug_payload(retrieved: list[Hit], kept: list[Hit], cited: list[int]) -> dict:
+    """Retrieval trace for evals: every retrieved chunk in rank order, whether it reached the prompt,
+    and the full text of the cited sources (numbered as in `kept`)."""
+    in_context = {h.key for h in kept}
+    return {
+        "retrieved": [
+            {
+                "act": h.payload["act"],
+                "unit_type": h.payload["unit_type"],
+                "number": h.payload["number"],
+                "part": h.payload["part"],
+                "paragraphs": h.payload["paragraphs"],
+                "score": round(h.score, 4),
+                "in_context": h.key in in_context,
+            }
+            for h in retrieved
+        ],
+        "sources": [{"id": n, "text": kept[n - 1].payload["text"]} for n in cited],
+    }

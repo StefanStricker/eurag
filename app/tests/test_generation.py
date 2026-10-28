@@ -6,6 +6,7 @@ from eurag.generation import (
     build_citations,
     build_messages,
     clean_citations,
+    debug_payload,
     fit_context,
 )
 from eurag.retrieval import Hit, covers_paragraph, explicit_refs, mentioned_acts
@@ -39,6 +40,10 @@ def test_clean_citations_decline():
     assert (answer, cited, declined) == ("The sources do not cover tax law.", [], True)
     assert clean_citations("**NOT_COVERED**\n\nNothing on this.", 3)[::2] == ("Nothing on this.", True)
     assert clean_citations(" NOT_COVERED ", 3) == (DECLINE_FALLBACK, [], True)
+    # Behind a bullet or a citation run (seen in eval run 20261028-074907_baseline).
+    assert clean_citations("- NOT_COVERED [1][2]\n\nThe DMA is not in the sources.", 3) == (
+        "The DMA is not in the sources.", [], True)
+    assert clean_citations("[1][3] NOT_COVERED The sources lack this.", 3)[1:] == ([], True)
     # Only a leading marker counts as a decline.
     assert clean_citations("Consent [1]. NOT_COVERED", 3)[2] is False
 
@@ -52,12 +57,16 @@ def _stream(tokens: list[str]) -> tuple[str, bool]:
 def test_decline_filter_hides_marker():
     assert _stream(["NOT", "_CO", "VERED", ":", " The sources", " lack this."]) == ("The sources lack this.", True)
     assert _stream(["**NOT_COVERED**", "\n\n", "Missing."]) == ("Missing.", True)
+    assert _stream(["-", " NOT", "_COVERED", " [1]", "\n\nMissing."])[1] is True
+    assert _stream(["[", "1", "][5] NOT_COVERED", " Missing."])[1] is True
 
 
 def test_decline_filter_passes_normal_answers():
     assert _stream(["Consent", " is required [1]."]) == ("Consent is required [1].", False)
     assert _stream(["NO", "T every case [1]."]) == ("NOT every case [1].", False)
     assert _stream(["No"]) == ("No", False)
+    assert _stream(["- ", "Consent", " [1]."]) == ("- Consent [1].", False)
+    assert _stream(["[1]", " The GDPR", " allows [1]."]) == ("[1] The GDPR allows [1].", False)
 
 
 def test_build_citations_only_cited():
@@ -158,3 +167,11 @@ def test_clean_citations_collapses_repeats_and_citation_only_lines():
 def test_clean_citations_dedupes_non_adjacent_repeats_in_run():
     answer, _, _ = clean_citations("Vital interests [2][1][2].", n_sources=3)
     assert answer == "Vital interests [2][1]."
+
+
+def test_debug_payload_marks_context_and_cited_texts():
+    retrieved = [_hit("6"), _hit("7"), _hit("9")]
+    kept = [retrieved[0], retrieved[2]]  # Article 7 cut by the context budget
+    debug = debug_payload(retrieved, kept, cited=[2])
+    assert [(r["number"], r["in_context"]) for r in debug["retrieved"]] == [("6", True), ("7", False), ("9", True)]
+    assert debug["sources"] == [{"id": 2, "text": "GDPR – Article 9\nBody 9"}]

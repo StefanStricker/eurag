@@ -57,6 +57,311 @@
   question: What rights does a person have regarding solely automated decision-making?
   expected:
     - {act: GDPR, unit: article, number: "22"}
+- id: gdpr-11
+  category: GDPR
+  question: Does the GDPR apply to a company based outside the EU that tracks how people in the EU behave online?
+  expected:
+    - {act: GDPR, unit: article, number: "3", paragraph: "2"}
+- id: gdpr-12
+  category: GDPR
+  question: Is someone keeping a private address book of friends and family bound by the GDPR?
+  expected:
+    - {act: GDPR, unit: article, number: "2", paragraph: "2"}
+- id: gdpr-13
+  category: GDPR
+  question: What are the basic principles every processing of personal data has to respect?
+  expected:
+    - {act: GDPR, unit: article, number: "5"}
+- id: gdpr-14
+  category: GDPR
+  question: What does the accountability principle mean for a controller in practice?
+  expected:
+    - {act: GDPR, unit: article, number: "5", paragraph: "2"}
+    - {act: GDPR, unit: article, number: "24", optional: true}
+- id: gdpr-15
+  category: GDPR
+  question: Who has to prove that consent was obtained, and how easy must it be to take consent back?
+  expected:
+    - {act: GDPR, unit: article, number: "7"}
+- id: gdpr-16
+  category: GDPR
+  question: May an online service refuse access unless users agree to processing that the service doesn't actually need?
+  expected:
+    - {act: GDPR, unit: article, number: "7", paragraph: "4"}
+- id: gdpr-17
+  category: GDPR
+  question: How does the GDPR define pseudonymisation?
+  expected:
+    - {act: GDPR, unit: article, number: "4", paragraph: "5"}
+- id: gdpr-18
+  category: GDPR
+  question: What does the GDPR mean by profiling?
+  expected:
+    - {act: GDPR, unit: article, number: "4", paragraph: "4"}
+- id: gdpr-19
+  category: GDPR
+  question: Who is allowed to process data about criminal convictions and offences?
+  expected:
+    - {act: GDPR, unit: article, number: "10"}
+- id: gdpr-20
+  category: GDPR
+  question: Does a controller have to collect additional information just so it can identify a user and comply with the GDPR?
+  expected:
+    - {act: GDPR, unit: article, number: "11"}
+- id: gdpr-21
+  category: GDPR
+  question: How quickly must a controller answer a data subject's request, and can it charge for it?
+  expected:
+    - {act: GDPR, unit: article, number: "12"}
+- id: gdpr-22
+  category: GDPR
+  question: What must people be told at the moment their data is collected from them directly?
+  expected:
+    - {act: GDPR, unit: article, number: "13"}
+- id: gdpr-23
+  category: GDPR
+  question: A company bought a marketing list. What must it tell the people on that list, and by when?
+  expected:
+    - {act: GDPR, unit: article, number: "14"}
+- id: gdpr-24
+  category: GDPR
+  question: What can I get from a company when I file a subject access request?
+  expected:
+    - {act: GDPR, unit: article, number: "15"}
+- id: gdpr-25
+  category: GDPR
+  question: Can I make a company fix wrong or incomplete information it holds about me?
+  expected:
+    - {act: GDPR, unit: article, number: "16"}
+- id: gdpr-26
+  category: GDPR
+  question: In which situations can a data subject ask for processing to be put on hold instead of having the data deleted?
+  expected:
+    - {act: GDPR, unit: article, number: "18"}
+- id: gdpr-27
+  category: GDPR
+  question: After correcting or deleting data, does the controller have to tell the companies it shared the data with?
+  expected:
+    - {act: GDPR, unit: article, number: "19"}
+- id: gdpr-28
+  category: GDPR
+  question: Can I stop a company from using my data for advertising?
+  expected:
+    - {act: GDPR, unit: article, number: "21", paragraph: "2"}
+- id: gdpr-29
+  category: GDPR
+  question: On what grounds may Member States limit data subject rights by law?
+  expected:
+    - {act: GDPR, unit: article, number: "23"}
+- id: gdpr-30
+  category: GDPR
+  question: What do data protection by design and by default require?
+  expected:
+    - {act: GDPR, unit: article, number: "25"}
+- id: gdpr-31
+  category: GDPR
+  question: Two companies decide together why and how data is processed. How must they split their responsibilities?
+  expected:
+    - {act: GDPR, unit: article, number: "26"}
+- id: gdpr-32
+  category: GDPR
+  question: When does a controller without an EU establishment need to appoint a representative in the Union?
+  expected:
+    - {act: GDPR, unit: article, number: "27"}
+- id: gdpr-33
+  category: GDPR
+  question: May a processor hire another processor to do part of the work?
+  expected:
+    - {act: GDPR, unit: article, number: "28"}
+- id: gdpr-34
+  category: GDPR
+  question: Which organisations have to document their processing activities, and what goes into that record?
+  expected:
+    - {act: GDPR, unit: article, number: "30"}
+- id: gdpr-35
+  category: GDPR
+  question: Which security measures, such as encryption, does the GDPR expect controllers and processors to consider?
+  expected:
+    - {act: GDPR, unit: article, number: "32"}
+- id: gdpr-36
+  category: GDPR
+  question: When do the people affected by a data breach have to be informed?
+  expected:
+    - {act: GDPR, unit: article, number: "34"}
+- id: gdpr-37
+  category: GDPR
+  question: When must a controller consult the supervisory authority before it starts processing?
+  expected:
+    - {act: GDPR, unit: article, number: "36"}
+- id: gdpr-38
+  category: GDPR
+  question: Can a data protection officer be fired or penalised for performing their tasks?
+  expected:
+    - {act: GDPR, unit: article, number: "38", paragraph: "3"}
+- id: gdpr-39
+  category: GDPR
+  question: What are the duties of a data protection officer?
+  expected:
+    - {act: GDPR, unit: article, number: "39"}
+- id: gdpr-40
+  category: GDPR
+  question: What role do codes of conduct play under the GDPR, and who monitors compliance with them?
+  expected:
+    - {act: GDPR, unit: article, number: "40"}
+    - {act: GDPR, unit: article, number: "41"}
+- id: gdpr-41
+  category: GDPR
+  question: How long is a GDPR data protection certification valid?
+  expected:
+    - {act: GDPR, unit: article, number: "42", paragraph: "7"}
+- id: gdpr-42
+  category: GDPR
+  question: What is the general rule for sending personal data to a country outside the EU?
+  expected:
+    - {act: GDPR, unit: article, number: "44"}
+- id: gdpr-43
+  category: GDPR
+  question: What does the Commission look at when deciding whether a third country protects data adequately?
+  expected:
+    - {act: GDPR, unit: article, number: "45"}
+- id: gdpr-44
+  category: GDPR
+  question: Without an adequacy decision, which safeguards such as standard contractual clauses allow a transfer?
+  expected:
+    - {act: GDPR, unit: article, number: "46"}
+- id: gdpr-45
+  category: GDPR
+  question: What must binding corporate rules of a corporate group contain to be approved?
+  expected:
+    - {act: GDPR, unit: article, number: "47"}
+- id: gdpr-46
+  category: GDPR
+  question: Can personal data go to a third country based only on the person's explicit consent when no other safeguard exists?
+  expected:
+    - {act: GDPR, unit: article, number: "49"}
+- id: gdpr-47
+  category: GDPR
+  question: A US court orders an EU company to hand over customer data. Is the order alone enough to justify the transfer?
+  expected:
+    - {act: GDPR, unit: article, number: "48"}
+- id: gdpr-48
+  category: GDPR
+  question: How does the GDPR ensure that data protection authorities are independent?
+  expected:
+    - {act: GDPR, unit: article, number: "52"}
+- id: gdpr-49
+  category: GDPR
+  question: Which data protection authority takes the lead when a company processes data in several Member States?
+  expected:
+    - {act: GDPR, unit: article, number: "56"}
+- id: gdpr-50
+  category: GDPR
+  question: What investigative and corrective powers does a supervisory authority have?
+  expected:
+    - {act: GDPR, unit: article, number: "58"}
+- id: gdpr-51
+  category: GDPR
+  question: How are disagreements between national data protection authorities resolved?
+  expected:
+    - {act: GDPR, unit: article, number: "65"}
+    - {act: GDPR, unit: article, number: "63", optional: true}
+    - {act: GDPR, unit: article, number: "60", optional: true}
+- id: gdpr-52
+  category: GDPR
+  question: Can a supervisory authority adopt provisional measures urgently without going through the normal cooperation procedure?
+  expected:
+    - {act: GDPR, unit: article, number: "66"}
+- id: gdpr-53
+  category: GDPR
+  question: What are the tasks of the European Data Protection Board?
+  expected:
+    - {act: GDPR, unit: article, number: "70"}
+- id: gdpr-54
+  category: GDPR
+  question: Where can I complain if I think my data is processed unlawfully?
+  expected:
+    - {act: GDPR, unit: article, number: "77"}
+- id: gdpr-55
+  category: GDPR
+  question: The data protection authority ignored my complaint for months. Can I take it to court?
+  expected:
+    - {act: GDPR, unit: article, number: "78"}
+- id: gdpr-56
+  category: GDPR
+  question: Can a non-profit consumer organisation complain or sue on behalf of data subjects?
+  expected:
+    - {act: GDPR, unit: article, number: "80"}
+- id: gdpr-57
+  category: GDPR
+  question: Who has to pay compensation for damage caused by unlawful processing, and can a processor be held liable?
+  expected:
+    - {act: GDPR, unit: article, number: "82"}
+- id: gdpr-58
+  category: GDPR
+  question: Which factors does an authority weigh when setting the amount of a GDPR fine?
+  expected:
+    - {act: GDPR, unit: article, number: "83", paragraph: "2"}
+- id: gdpr-59
+  category: GDPR
+  question: What is the maximum fine for violating a controller's obligations such as security or breach notification?
+  expected:
+    - {act: GDPR, unit: article, number: "83", paragraph: "4"}
+- id: gdpr-60
+  category: GDPR
+  question: Can Member States impose additional penalties for GDPR infringements that are not subject to administrative fines?
+  expected:
+    - {act: GDPR, unit: article, number: "84"}
+- id: gdpr-61
+  category: GDPR
+  question: How does the GDPR deal with journalism and freedom of expression?
+  expected:
+    - {act: GDPR, unit: article, number: "85"}
+- id: gdpr-62
+  category: GDPR
+  question: Can a Member State adopt its own rules on employee data?
+  expected:
+    - {act: GDPR, unit: article, number: "88"}
+- id: gdpr-63
+  category: GDPR
+  question: What safeguards and derogations apply to processing for scientific research or archiving?
+  expected:
+    - {act: GDPR, unit: article, number: "89"}
+- id: gdpr-64
+  category: GDPR
+  question: Can a public authority rely on legitimate interests when carrying out its tasks?
+  expected:
+    - {act: GDPR, unit: article, number: "6", paragraph: "1"}
+- id: gdpr-65
+  category: GDPR
+  question: When may data collected for one purpose be used for a different purpose?
+  expected:
+    - {act: GDPR, unit: article, number: "6", paragraph: "4"}
+    - {act: GDPR, unit: article, number: "5", optional: true}
+- id: gdpr-66
+  category: GDPR
+  question: May a hospital process health data for medical diagnosis without the patient's consent?
+  expected:
+    - {act: GDPR, unit: article, number: "9", paragraph: "2"}
+- id: gdpr-67
+  category: GDPR
+  question: What counts as personal data under the GDPR?
+  expected:
+    - {act: GDPR, unit: article, number: "4", paragraph: "1"}
+- id: gdpr-68
+  category: GDPR
+  question: Since when has the GDPR applied?
+  expected:
+    - {act: GDPR, unit: article, number: "99"}
+- id: gdpr-69
+  category: GDPR
+  question: What does the GDPR say about national identification numbers?
+  expected:
+    - {act: GDPR, unit: article, number: "87"}
+- id: gdpr-70
+  category: GDPR
+  question: What happened to the old Data Protection Directive 95/46/EC?
+  expected:
+    - {act: GDPR, unit: article, number: "94"}
 
 # --- AI Act -----------------------------------------------------------------
 - id: aiact-01
@@ -110,6 +415,378 @@
   question: What are the maximum fines for engaging in prohibited AI practices?
   expected:
     - {act: AI Act, unit: article, number: "99"}
+- id: aiact-11
+  category: AI Act
+  question: Does the AI Act cover AI used exclusively for military or defence purposes?
+  expected:
+    - {act: AI Act, unit: article, number: "2", paragraph: "3"}
+- id: aiact-12
+  category: AI Act
+  question: Are AI systems built only for scientific research and development covered by the AI Act?
+  expected:
+    - {act: AI Act, unit: article, number: "2", paragraph: "6"}
+- id: aiact-13
+  category: AI Act
+  question: Is AI released under a free and open-source licence exempt from the AI Act?
+  expected:
+    - {act: AI Act, unit: article, number: "2", paragraph: "12"}
+- id: aiact-14
+  category: AI Act
+  question: Who counts as a deployer under the AI Act?
+  expected:
+    - {act: AI Act, unit: article, number: "3", paragraph: "4"}
+- id: aiact-15
+  category: AI Act
+  question: Who is the provider of an AI system?
+  expected:
+    - {act: AI Act, unit: article, number: "3", paragraph: "3"}
+- id: aiact-16
+  category: AI Act
+  question: How does the AI Act define a deep fake?
+  expected:
+    - {act: AI Act, unit: article, number: "3", paragraph: "60"}
+- id: aiact-17
+  category: AI Act
+  question: Can an employer use AI to infer the emotions of its employees?
+  expected:
+    - {act: AI Act, unit: article, number: "5", paragraph: "1"}
+    - {act: AI Act, unit: article, number: "3", optional: true}
+- id: aiact-18
+  category: AI Act
+  question: Is it allowed to rate citizens by their social behaviour and treat them worse because of the score?
+  expected:
+    - {act: AI Act, unit: article, number: "5", paragraph: "1"}
+- id: aiact-19
+  category: AI Act
+  question: Under what conditions may police use real-time facial recognition in public places?
+  expected:
+    - {act: AI Act, unit: article, number: "5"}
+- id: aiact-20
+  category: AI Act
+  question: Can a company build a facial recognition database by scraping photos from the internet?
+  expected:
+    - {act: AI Act, unit: article, number: "5", paragraph: "1"}
+- id: aiact-21
+  category: AI Act
+  question: Is an app that produces sexual deepfakes of real people without their consent banned, and since when?
+  expected:
+    - {act: AI Act, unit: article, number: "5"}
+    - {act: AI Act, unit: article, number: "113", optional: true}
+  note: Prohibition added by the Digital Omnibus on AI (Art. 5(1)(ba)), applies from 2 December 2026.
+- id: aiact-22
+  category: AI Act
+  question: Which criminal offences can justify using real-time remote biometric identification to locate a suspect?
+  expected:
+    - {act: AI Act, unit: annex, number: "II"}
+    - {act: AI Act, unit: article, number: "5", optional: true}
+- id: aiact-23
+  category: AI Act
+  question: Can a system listed in Annex III avoid being classified as high-risk, for example if it only does a narrow procedural task?
+  expected:
+    - {act: AI Act, unit: article, number: "6", paragraph: "3"}
+- id: aiact-24
+  category: AI Act
+  question: What must a provider do if it decides its Annex III system is not high-risk after all?
+  expected:
+    - {act: AI Act, unit: article, number: "6", paragraph: "4"}
+    - {act: AI Act, unit: article, number: "49", optional: true}
+- id: aiact-25
+  category: AI Act
+  question: Which areas of use are listed as high-risk, such as education, employment or migration?
+  expected:
+    - {act: AI Act, unit: annex, number: "III"}
+- id: aiact-26
+  category: AI Act
+  question: Is an AI system that assesses whether someone gets a loan considered high-risk?
+  expected:
+    - {act: AI Act, unit: annex, number: "III"}
+    - {act: AI Act, unit: article, number: "6", optional: true}
+- id: aiact-27
+  category: AI Act
+  question: Can the Commission add new use cases to the list of high-risk AI systems?
+  expected:
+    - {act: AI Act, unit: article, number: "7"}
+- id: aiact-28
+  category: AI Act
+  question: What quality criteria must training, validation and test data for high-risk AI meet?
+  expected:
+    - {act: AI Act, unit: article, number: "10"}
+- id: aiact-29
+  category: AI Act
+  question: What has to go into the technical documentation of a high-risk AI system?
+  expected:
+    - {act: AI Act, unit: article, number: "11"}
+    - {act: AI Act, unit: annex, number: "IV"}
+- id: aiact-30
+  category: AI Act
+  question: What event logging must a high-risk AI system support?
+  expected:
+    - {act: AI Act, unit: article, number: "12"}
+- id: aiact-31
+  category: AI Act
+  question: What information must the instructions for use of a high-risk AI system give deployers?
+  expected:
+    - {act: AI Act, unit: article, number: "13"}
+- id: aiact-32
+  category: AI Act
+  question: What does the AI Act require regarding accuracy, robustness and protection against attacks like data poisoning?
+  expected:
+    - {act: AI Act, unit: article, number: "15"}
+- id: aiact-33
+  category: AI Act
+  question: Give an overview of the obligations of providers of high-risk AI systems.
+  expected:
+    - {act: AI Act, unit: article, number: "16"}
+- id: aiact-34
+  category: AI Act
+  question: What must a provider's quality management system cover?
+  expected:
+    - {act: AI Act, unit: article, number: "17"}
+- id: aiact-35
+  category: AI Act
+  question: How long must a provider keep the documentation of a high-risk AI system available for authorities?
+  expected:
+    - {act: AI Act, unit: article, number: "18"}
+- id: aiact-36
+  category: AI Act
+  question: For how long must automatically generated logs of a high-risk AI system be kept?
+  expected:
+    - {act: AI Act, unit: article, number: "19"}
+    - {act: AI Act, unit: article, number: "26", optional: true}
+- id: aiact-37
+  category: AI Act
+  question: What must a provider do when it discovers its high-risk AI system no longer complies?
+  expected:
+    - {act: AI Act, unit: article, number: "20"}
+- id: aiact-38
+  category: AI Act
+  question: When does a provider from outside the EU have to appoint an authorised representative for a high-risk AI system?
+  expected:
+    - {act: AI Act, unit: article, number: "22"}
+- id: aiact-39
+  category: AI Act
+  question: What must an importer verify before bringing a high-risk AI system onto the EU market?
+  expected:
+    - {act: AI Act, unit: article, number: "23"}
+- id: aiact-40
+  category: AI Act
+  question: What are the obligations of distributors of high-risk AI systems?
+  expected:
+    - {act: AI Act, unit: article, number: "24"}
+- id: aiact-41
+  category: AI Act
+  question: When does a distributor or deployer turn into the provider of a high-risk AI system, for example after a substantial modification?
+  expected:
+    - {act: AI Act, unit: article, number: "25"}
+- id: aiact-42
+  category: AI Act
+  question: What obligations does a company using a high-risk AI system have?
+  expected:
+    - {act: AI Act, unit: article, number: "26"}
+- id: aiact-43
+  category: AI Act
+  question: Do employers have to tell staff before putting a high-risk AI system into use at the workplace?
+  expected:
+    - {act: AI Act, unit: article, number: "26", paragraph: "7"}
+- id: aiact-44
+  category: AI Act
+  question: Can a deployer build on an existing data protection impact assessment when doing its fundamental rights impact assessment?
+  expected:
+    - {act: AI Act, unit: article, number: "27", paragraph: "4"}
+- id: aiact-45
+  category: AI Act
+  question: Which conformity assessment procedure does a high-risk AI system have to go through?
+  expected:
+    - {act: AI Act, unit: article, number: "43"}
+    - {act: AI Act, unit: annex, number: "VI", optional: true}
+    - {act: AI Act, unit: annex, number: "VII", optional: true}
+- id: aiact-46
+  category: AI Act
+  question: What must the EU declaration of conformity for a high-risk AI system contain?
+  expected:
+    - {act: AI Act, unit: article, number: "47"}
+    - {act: AI Act, unit: annex, number: "V"}
+- id: aiact-47
+  category: AI Act
+  question: How must the CE marking be affixed to a high-risk AI system, including purely digital ones?
+  expected:
+    - {act: AI Act, unit: article, number: "48"}
+- id: aiact-48
+  category: AI Act
+  question: Who has to register high-risk AI systems in the EU database?
+  expected:
+    - {act: AI Act, unit: article, number: "49"}
+    - {act: AI Act, unit: article, number: "71", optional: true}
+- id: aiact-49
+  category: AI Act
+  question: What information does a provider submit when registering a high-risk AI system?
+  expected:
+    - {act: AI Act, unit: annex, number: "VIII"}
+    - {act: AI Act, unit: article, number: "49", optional: true}
+- id: aiact-50
+  category: AI Act
+  question: Must AI-generated text published to inform the public on matters of public interest be labelled as such?
+  expected:
+    - {act: AI Act, unit: article, number: "50", paragraph: "4"}
+- id: aiact-51
+  category: AI Act
+  question: Do people have to be told when an emotion recognition or biometric categorisation system is used on them?
+  expected:
+    - {act: AI Act, unit: article, number: "50", paragraph: "3"}
+- id: aiact-52
+  category: AI Act
+  question: What obligations apply to providers of general-purpose AI models?
+  expected:
+    - {act: AI Act, unit: article, number: "53"}
+- id: aiact-53
+  category: AI Act
+  question: What technical documentation must a provider of a general-purpose AI model prepare for the AI Office?
+  expected:
+    - {act: AI Act, unit: annex, number: "XI"}
+    - {act: AI Act, unit: article, number: "53", optional: true}
+- id: aiact-54
+  category: AI Act
+  question: What information must a general-purpose AI model provider give to companies integrating the model into their systems?
+  expected:
+    - {act: AI Act, unit: annex, number: "XII"}
+    - {act: AI Act, unit: article, number: "53", optional: true}
+- id: aiact-55
+  category: AI Act
+  question: Are providers of open-source general-purpose AI models exempt from the model obligations?
+  expected:
+    - {act: AI Act, unit: article, number: "53", paragraph: "2"}
+    - {act: AI Act, unit: article, number: "54", optional: true}
+- id: aiact-56
+  category: AI Act
+  question: What additional duties apply to general-purpose AI models with systemic risk, such as adversarial testing?
+  expected:
+    - {act: AI Act, unit: article, number: "55"}
+- id: aiact-57
+  category: AI Act
+  question: How and when must a provider inform the Commission that its model reaches the systemic-risk threshold?
+  expected:
+    - {act: AI Act, unit: article, number: "52"}
+- id: aiact-58
+  category: AI Act
+  question: Besides training compute, which criteria can the Commission use to designate a model as having systemic risk?
+  expected:
+    - {act: AI Act, unit: annex, number: "XIII"}
+    - {act: AI Act, unit: article, number: "51", optional: true}
+- id: aiact-59
+  category: AI Act
+  question: What are codes of practice for general-purpose AI models and how are they drawn up?
+  expected:
+    - {act: AI Act, unit: article, number: "56"}
+- id: aiact-60
+  category: AI Act
+  question: What is an AI regulatory sandbox and by when must each Member State have one?
+  expected:
+    - {act: AI Act, unit: article, number: "57"}
+  note: The Digital Omnibus on AI moved the deadline to 2 August 2027.
+- id: aiact-61
+  category: AI Act
+  question: Can personal data collected for other purposes be reused to develop AI systems in a regulatory sandbox?
+  expected:
+    - {act: AI Act, unit: article, number: "59"}
+- id: aiact-62
+  category: AI Act
+  question: Under what conditions can a provider test a high-risk AI system in the real world outside a sandbox?
+  expected:
+    - {act: AI Act, unit: article, number: "60"}
+- id: aiact-63
+  category: AI Act
+  question: What must participants be told before taking part in a real-world test of an AI system?
+  expected:
+    - {act: AI Act, unit: article, number: "61"}
+- id: aiact-64
+  category: AI Act
+  question: What support does the AI Act offer SMEs and start-ups?
+  expected:
+    - {act: AI Act, unit: article, number: "62"}
+    - {act: AI Act, unit: article, number: "63", optional: true}
+- id: aiact-65
+  category: AI Act
+  question: What is the AI Office?
+  expected:
+    - {act: AI Act, unit: article, number: "64"}
+- id: aiact-66
+  category: AI Act
+  question: Who sits on the European Artificial Intelligence Board and what does it do?
+  expected:
+    - {act: AI Act, unit: article, number: "65"}
+    - {act: AI Act, unit: article, number: "66"}
+- id: aiact-67
+  category: AI Act
+  question: What is the role of the scientific panel of independent experts?
+  expected:
+    - {act: AI Act, unit: article, number: "68"}
+- id: aiact-68
+  category: AI Act
+  question: Within how many days must a provider report a serious incident caused by its high-risk AI system?
+  expected:
+    - {act: AI Act, unit: article, number: "73"}
+- id: aiact-69
+  category: AI Act
+  question: What post-market monitoring does a provider have to set up?
+  expected:
+    - {act: AI Act, unit: article, number: "72"}
+- id: aiact-70
+  category: AI Act
+  question: Which AI systems are supervised by the AI Office instead of national market surveillance authorities?
+  expected:
+    - {act: AI Act, unit: article, number: "75"}
+    - {act: AI Act, unit: article, number: "75a", optional: true}
+- id: aiact-71
+  category: AI Act
+  question: Can a person demand an explanation when a decision about them was based on a high-risk AI system?
+  expected:
+    - {act: AI Act, unit: article, number: "86"}
+- id: aiact-72
+  category: AI Act
+  question: Where can I complain if I believe an AI system breaches the AI Act?
+  expected:
+    - {act: AI Act, unit: article, number: "85"}
+- id: aiact-73
+  category: AI Act
+  question: What fine applies for giving authorities incorrect or misleading information under the AI Act?
+  expected:
+    - {act: AI Act, unit: article, number: "99", paragraph: "5"}
+- id: aiact-74
+  category: AI Act
+  question: How much can the Commission fine a provider of a general-purpose AI model?
+  expected:
+    - {act: AI Act, unit: article, number: "101"}
+- id: aiact-75
+  category: AI Act
+  question: From when do the requirements for high-risk AI systems apply?
+  expected:
+    - {act: AI Act, unit: article, number: "113"}
+  note: After the Digital Omnibus on AI, 2 December 2027 for Annex III and 2 August 2028 for Annex I systems.
+- id: aiact-76
+  category: AI Act
+  question: Do the rules apply to high-risk AI systems already on the market before the AI Act's application date?
+  expected:
+    - {act: AI Act, unit: article, number: "111"}
+- id: aiact-77
+  category: AI Act
+  question: Can authorities act against a high-risk AI system that complies with the AI Act but still endangers people?
+  expected:
+    - {act: AI Act, unit: article, number: "82"}
+- id: aiact-78
+  category: AI Act
+  question: What happens if a market surveillance authority finds that a provider wrongly classified its system as not high-risk?
+  expected:
+    - {act: AI Act, unit: article, number: "80"}
+- id: aiact-79
+  category: AI Act
+  question: Are whistleblowers who report AI Act infringements protected?
+  expected:
+    - {act: AI Act, unit: article, number: "87"}
+- id: aiact-80
+  category: AI Act
+  question: Who can fine EU institutions and agencies for breaking the AI Act?
+  expected:
+    - {act: AI Act, unit: article, number: "100"}
 
 # --- Data Act ---------------------------------------------------------------
 - id: dataact-01
@@ -168,6 +845,216 @@
   question: What safeguards apply against unlawful third-country government access to non-personal data?
   expected:
     - {act: Data Act, unit: article, number: "32"}
+- id: dataact-09
+  category: Data Act
+  question: What is a connected product under the Data Act?
+  expected:
+    - {act: Data Act, unit: article, number: "2"}
+- id: dataact-10
+  category: Data Act
+  question: What does the Data Act mean by a related service?
+  expected:
+    - {act: Data Act, unit: article, number: "2"}
+- id: dataact-11
+  category: Data Act
+  question: What must a seller tell a buyer about the data a smart device will generate before the purchase?
+  expected:
+    - {act: Data Act, unit: article, number: "3", paragraph: "2"}
+- id: dataact-12
+  category: Data Act
+  question: May a manufacturer use non-personal data from my connected car for its own purposes?
+  expected:
+    - {act: Data Act, unit: article, number: "4", paragraph: "13"}
+- id: dataact-13
+  category: Data Act
+  question: Can a data holder refuse to give a user data because it would reveal trade secrets?
+  expected:
+    - {act: Data Act, unit: article, number: "4"}
+- id: dataact-14
+  category: Data Act
+  question: May a user use the data obtained from a connected product to build a competing product?
+  expected:
+    - {act: Data Act, unit: article, number: "4", paragraph: "10"}
+- id: dataact-15
+  category: Data Act
+  question: What is a third party not allowed to do with data it received at a user's request?
+  expected:
+    - {act: Data Act, unit: article, number: "6"}
+- id: dataact-16
+  category: Data Act
+  question: Do micro and small enterprises have to comply with the user data access and sharing obligations?
+  expected:
+    - {act: Data Act, unit: article, number: "7"}
+- id: dataact-17
+  category: Data Act
+  question: On what terms must a data holder make data available to a data recipient when obliged to?
+  expected:
+    - {act: Data Act, unit: article, number: "8"}
+- id: dataact-18
+  category: Data Act
+  question: How much compensation may a data holder ask for making data available, and is it different for SMEs?
+  expected:
+    - {act: Data Act, unit: article, number: "9"}
+- id: dataact-19
+  category: Data Act
+  question: How can a disagreement about the compensation or terms for making data available be resolved outside court?
+  expected:
+    - {act: Data Act, unit: article, number: "10"}
+- id: dataact-20
+  category: Data Act
+  question: What can a data holder do if a recipient obtained data by deception or misused it?
+  expected:
+    - {act: Data Act, unit: article, number: "11"}
+- id: dataact-21
+  category: Data Act
+  question: Do the conditions for making data available in Chapter III also apply to data shared voluntarily?
+  expected:
+    - {act: Data Act, unit: article, number: "12"}
+- id: dataact-22
+  category: Data Act
+  question: What counts as an exceptional need that lets a public body ask businesses for data?
+  expected:
+    - {act: Data Act, unit: article, number: "15"}
+- id: dataact-23
+  category: Data Act
+  question: What must a public body's request for data based on exceptional need contain?
+  expected:
+    - {act: Data Act, unit: article, number: "17"}
+- id: dataact-24
+  category: Data Act
+  question: On what grounds can a company decline or ask to modify a public sector data request?
+  expected:
+    - {act: Data Act, unit: article, number: "18"}
+- id: dataact-25
+  category: Data Act
+  question: What must a public body do with business data it obtained for an exceptional need once it no longer needs it?
+  expected:
+    - {act: Data Act, unit: article, number: "19"}
+- id: dataact-26
+  category: Data Act
+  question: Do companies get paid for providing data to a public body during a public emergency?
+  expected:
+    - {act: Data Act, unit: article, number: "20"}
+- id: dataact-27
+  category: Data Act
+  question: Can a public body pass business data received for an exceptional need on to researchers?
+  expected:
+    - {act: Data Act, unit: article, number: "21"}
+- id: dataact-28
+  category: Data Act
+  question: Which obstacles to switching must providers of data processing services remove?
+  expected:
+    - {act: Data Act, unit: article, number: "23"}
+- id: dataact-29
+  category: Data Act
+  question: What is the maximum notice period and transitional period when a customer switches cloud provider?
+  expected:
+    - {act: Data Act, unit: article, number: "25"}
+- id: dataact-30
+  category: Data Act
+  question: What information about switching must a cloud provider give customers before signing the contract?
+  expected:
+    - {act: Data Act, unit: article, number: "26"}
+- id: dataact-31
+  category: Data Act
+  question: Must cloud providers publish information on the jurisdiction their infrastructure is subject to and on foreign government access?
+  expected:
+    - {act: Data Act, unit: article, number: "28"}
+- id: dataact-32
+  category: Data Act
+  question: What does functional equivalence mean when switching between infrastructure-as-a-service providers?
+  expected:
+    - {act: Data Act, unit: article, number: "30"}
+- id: dataact-33
+  category: Data Act
+  question: Are custom-built cloud services or trial versions exempt from the switching rules?
+  expected:
+    - {act: Data Act, unit: article, number: "31"}
+- id: dataact-34
+  category: Data Act
+  question: What interoperability requirements apply to participants in data spaces?
+  expected:
+    - {act: Data Act, unit: article, number: "33"}
+- id: dataact-35
+  category: Data Act
+  question: Can a cloud provider charge egress fees when a customer uses several cloud services at the same time?
+  expected:
+    - {act: Data Act, unit: article, number: "34"}
+- id: dataact-36
+  category: Data Act
+  question: What role do open interoperability specifications and standards play for cloud services?
+  expected:
+    - {act: Data Act, unit: article, number: "35"}
+- id: dataact-37
+  category: Data Act
+  question: What requirements must smart contracts used for data sharing meet, for example a way to stop them?
+  expected:
+    - {act: Data Act, unit: article, number: "36"}
+- id: dataact-38
+  category: Data Act
+  question: Which authorities enforce the Data Act, and what is a data coordinator?
+  expected:
+    - {act: Data Act, unit: article, number: "37"}
+- id: dataact-39
+  category: Data Act
+  question: Where can someone complain about an infringement of their Data Act rights?
+  expected:
+    - {act: Data Act, unit: article, number: "38"}
+- id: dataact-40
+  category: Data Act
+  question: What penalties apply for breaking the Data Act?
+  expected:
+    - {act: Data Act, unit: article, number: "40"}
+- id: dataact-41
+  category: Data Act
+  question: Will the Commission provide model contract terms for data sharing and cloud contracts?
+  expected:
+    - {act: Data Act, unit: article, number: "41"}
+- id: dataact-42
+  category: Data Act
+  question: What tasks does the European Data Innovation Board have under the Data Act?
+  expected:
+    - {act: Data Act, unit: article, number: "42"}
+- id: dataact-43
+  category: Data Act
+  question: Can a manufacturer invoke the database sui generis right to block access to data from its devices?
+  expected:
+    - {act: Data Act, unit: article, number: "43"}
+- id: dataact-44
+  category: Data Act
+  question: From when does the Data Act apply, and when does the access-by-design obligation for new products start?
+  expected:
+    - {act: Data Act, unit: article, number: "50"}
+- id: dataact-45
+  category: Data Act
+  question: What is the difference between a user and a data holder under the Data Act?
+  expected:
+    - {act: Data Act, unit: article, number: "2"}
+- id: dataact-46
+  category: Data Act
+  question: Does the Data Act apply to manufacturers outside the EU whose products are sold in the Union?
+  expected:
+    - {act: Data Act, unit: article, number: "1", paragraph: "3"}
+- id: dataact-47
+  category: Data Act
+  question: How does the Data Act interact with other Union laws that already regulate access to data?
+  expected:
+    - {act: Data Act, unit: article, number: "44"}
+- id: dataact-48
+  category: Data Act
+  question: Can a decision of a Data Act competent authority be challenged in court?
+  expected:
+    - {act: Data Act, unit: article, number: "39"}
+- id: dataact-49
+  category: Data Act
+  question: Do the old and new cloud providers have to cooperate during a switch?
+  expected:
+    - {act: Data Act, unit: article, number: "27"}
+- id: dataact-50
+  category: Data Act
+  question: How do public bodies of different Member States cooperate on data requests based on exceptional need?
+  expected:
+    - {act: Data Act, unit: article, number: "22"}
 
 # --- Data Governance Act ----------------------------------------------------
 - id: dga-01
@@ -223,6 +1110,163 @@
   question: May public sector bodies grant exclusive rights to re-use data?
   expected:
     - {act: Data Governance Act, unit: article, number: "4"}
+- id: dga-08
+  category: Data Governance Act
+  question: Which kinds of public sector data fall under the DGA's re-use rules, and which are excluded?
+  expected:
+    - {act: Data Governance Act, unit: article, number: "3"}
+- id: dga-09
+  category: Data Governance Act
+  question: How long may an exclusive right to re-use public sector data last at most?
+  expected:
+    - {act: Data Governance Act, unit: article, number: "4"}
+- id: dga-10
+  category: Data Governance Act
+  question: May a re-user try to re-identify people in anonymised data obtained from a public body?
+  expected:
+    - {act: Data Governance Act, unit: article, number: "5"}
+- id: dga-11
+  category: Data Governance Act
+  question: Can a re-user transfer confidential non-personal public sector data to a third country?
+  expected:
+    - {act: Data Governance Act, unit: article, number: "5"}
+- id: dga-12
+  category: Data Governance Act
+  question: What fees may public sector bodies charge for allowing re-use of their data?
+  expected:
+    - {act: Data Governance Act, unit: article, number: "6"}
+- id: dga-13
+  category: Data Governance Act
+  question: How do competent bodies support public sector bodies in granting re-use, for example with secure processing environments?
+  expected:
+    - {act: Data Governance Act, unit: article, number: "7"}
+- id: dga-14
+  category: Data Governance Act
+  question: What is a single information point under the DGA?
+  expected:
+    - {act: Data Governance Act, unit: article, number: "8"}
+- id: dga-15
+  category: Data Governance Act
+  question: Within what time must a public body decide on a request to re-use protected data?
+  expected:
+    - {act: Data Governance Act, unit: article, number: "9"}
+- id: dga-16
+  category: Data Governance Act
+  question: Is a data cooperative a data intermediation service under the DGA?
+  expected:
+    - {act: Data Governance Act, unit: article, number: "10"}
+    - {act: Data Governance Act, unit: article, number: "2", optional: true}
+- id: dga-17
+  category: Data Governance Act
+  question: What must a data intermediation provider do before starting its activity, and what if it is not established in the EU?
+  expected:
+    - {act: Data Governance Act, unit: article, number: "11"}
+- id: dga-18
+  category: Data Governance Act
+  question: May a data intermediary make its prices depend on whether the customer also buys its other services?
+  expected:
+    - {act: Data Governance Act, unit: article, number: "12"}
+- id: dga-19
+  category: Data Governance Act
+  question: Who monitors data intermediation services providers and what can they do in case of non-compliance?
+  expected:
+    - {act: Data Governance Act, unit: article, number: "14"}
+    - {act: Data Governance Act, unit: article, number: "13", optional: true}
+- id: dga-20
+  category: Data Governance Act
+  question: Which organisations are excluded from the rules on data intermediation services?
+  expected:
+    - {act: Data Governance Act, unit: article, number: "15"}
+- id: dga-21
+  category: Data Governance Act
+  question: Can Member States adopt national policies to promote data altruism?
+  expected:
+    - {act: Data Governance Act, unit: article, number: "16"}
+- id: dga-22
+  category: Data Governance Act
+  question: Where can I find a list of recognised data altruism organisations?
+  expected:
+    - {act: Data Governance Act, unit: article, number: "17"}
+- id: dga-23
+  category: Data Governance Act
+  question: How does an entity register as a data altruism organisation, and how long does the decision take?
+  expected:
+    - {act: Data Governance Act, unit: article, number: "19"}
+- id: dga-24
+  category: Data Governance Act
+  question: What records and reports must a recognised data altruism organisation keep?
+  expected:
+    - {act: Data Governance Act, unit: article, number: "20"}
+- id: dga-25
+  category: Data Governance Act
+  question: What must a data altruism organisation tell people before they donate their data, and can they withdraw consent?
+  expected:
+    - {act: Data Governance Act, unit: article, number: "21"}
+- id: dga-26
+  category: Data Governance Act
+  question: What is the data altruism rulebook?
+  expected:
+    - {act: Data Governance Act, unit: article, number: "22"}
+- id: dga-27
+  category: Data Governance Act
+  question: Is there a standard EU form for giving consent to data altruism?
+  expected:
+    - {act: Data Governance Act, unit: article, number: "25"}
+- id: dga-28
+  category: Data Governance Act
+  question: What independence requirements apply to DGA competent authorities?
+  expected:
+    - {act: Data Governance Act, unit: article, number: "26"}
+- id: dga-29
+  category: Data Governance Act
+  question: Can I lodge a complaint against a data intermediary or a data altruism organisation?
+  expected:
+    - {act: Data Governance Act, unit: article, number: "27"}
+- id: dga-30
+  category: Data Governance Act
+  question: Is there a judicial remedy against a decision of a DGA competent authority?
+  expected:
+    - {act: Data Governance Act, unit: article, number: "28"}
+- id: dga-31
+  category: Data Governance Act
+  question: Who is represented in the European Data Innovation Board?
+  expected:
+    - {act: Data Governance Act, unit: article, number: "29"}
+- id: dga-32
+  category: Data Governance Act
+  question: How does the DGA protect non-personal data held in the EU against access by foreign governments?
+  expected:
+    - {act: Data Governance Act, unit: article, number: "31"}
+- id: dga-33
+  category: Data Governance Act
+  question: What penalties does the DGA provide for infringements?
+  expected:
+    - {act: Data Governance Act, unit: article, number: "34"}
+- id: dga-34
+  category: Data Governance Act
+  question: By when did data intermediaries already operating before the DGA have to comply?
+  expected:
+    - {act: Data Governance Act, unit: article, number: "37"}
+- id: dga-35
+  category: Data Governance Act
+  question: Since when does the Data Governance Act apply?
+  expected:
+    - {act: Data Governance Act, unit: article, number: "38"}
+- id: dga-36
+  category: Data Governance Act
+  question: What does re-use mean under the DGA?
+  expected:
+    - {act: Data Governance Act, unit: article, number: "2"}
+- id: dga-37
+  category: Data Governance Act
+  question: Does the DGA oblige public sector bodies to allow re-use of their data?
+  expected:
+    - {act: Data Governance Act, unit: article, number: "1", paragraph: "2"}
+- id: dga-38
+  category: Data Governance Act
+  question: What is a secure processing environment?
+  expected:
+    - {act: Data Governance Act, unit: article, number: "2"}
 
 # --- ePrivacy Directive -----------------------------------------------------
 - id: eprivacy-01
@@ -250,6 +1294,111 @@
   question: What rules apply to processing location data?
   expected:
     - {act: ePrivacy Directive, unit: article, number: "9"}
+- id: eprivacy-06
+  category: ePrivacy Directive
+  question: What is the purpose and scope of the ePrivacy Directive?
+  expected:
+    - {act: ePrivacy Directive, unit: article, number: "1"}
+- id: eprivacy-07
+  category: ePrivacy Directive
+  question: How does the ePrivacy Directive define traffic data and location data?
+  expected:
+    - {act: ePrivacy Directive, unit: article, number: "2"}
+- id: eprivacy-08
+  category: ePrivacy Directive
+  question: Which services does the ePrivacy Directive apply to?
+  expected:
+    - {act: ePrivacy Directive, unit: article, number: "3"}
+- id: eprivacy-09
+  category: ePrivacy Directive
+  question: What security measures must providers of electronic communications services take?
+  expected:
+    - {act: ePrivacy Directive, unit: article, number: "4"}
+- id: eprivacy-10
+  category: ePrivacy Directive
+  question: When must a telecoms provider notify a personal data breach to the authority and to subscribers?
+  expected:
+    - {act: ePrivacy Directive, unit: article, number: "4", paragraph: "3"}
+- id: eprivacy-11
+  category: ePrivacy Directive
+  question: May a business record phone calls as evidence of commercial transactions?
+  expected:
+    - {act: ePrivacy Directive, unit: article, number: "5", paragraph: "2"}
+- id: eprivacy-12
+  category: ePrivacy Directive
+  question: Can a telecoms provider use traffic data to market its own services?
+  expected:
+    - {act: ePrivacy Directive, unit: article, number: "6", paragraph: "3"}
+- id: eprivacy-13
+  category: ePrivacy Directive
+  question: Do subscribers have a right to receive bills that are not itemised?
+  expected:
+    - {act: ePrivacy Directive, unit: article, number: "7"}
+- id: eprivacy-14
+  category: ePrivacy Directive
+  question: Can a caller prevent their phone number from being shown to the person they call?
+  expected:
+    - {act: ePrivacy Directive, unit: article, number: "8"}
+- id: eprivacy-15
+  category: ePrivacy Directive
+  question: Can emergency services see a caller's location even if the caller withheld their number or didn't consent?
+  expected:
+    - {act: ePrivacy Directive, unit: article, number: "10"}
+- id: eprivacy-16
+  category: ePrivacy Directive
+  question: Can I stop calls from being automatically forwarded to my phone by someone else?
+  expected:
+    - {act: ePrivacy Directive, unit: article, number: "11"}
+- id: eprivacy-17
+  category: ePrivacy Directive
+  question: Do subscribers decide whether they are listed in a public phone directory?
+  expected:
+    - {act: ePrivacy Directive, unit: article, number: "12"}
+- id: eprivacy-18
+  category: ePrivacy Directive
+  question: Is consent needed to use automated calling machines or fax for direct marketing?
+  expected:
+    - {act: ePrivacy Directive, unit: article, number: "13", paragraph: "1"}
+- id: eprivacy-19
+  category: ePrivacy Directive
+  question: May a marketing email hide who sent it or lack a valid address to opt out?
+  expected:
+    - {act: ePrivacy Directive, unit: article, number: "13", paragraph: "4"}
+- id: eprivacy-20
+  category: ePrivacy Directive
+  question: Are companies also protected against spam, or only individuals?
+  expected:
+    - {act: ePrivacy Directive, unit: article, number: "13", paragraph: "5"}
+- id: eprivacy-21
+  category: ePrivacy Directive
+  question: When can Member States restrict the confidentiality of communications, for example for data retention?
+  expected:
+    - {act: ePrivacy Directive, unit: article, number: "15", paragraph: "1"}
+- id: eprivacy-22
+  category: ePrivacy Directive
+  question: What enforcement and penalty rules does the ePrivacy Directive require of Member States?
+  expected:
+    - {act: ePrivacy Directive, unit: article, number: "15a"}
+- id: eprivacy-23
+  category: ePrivacy Directive
+  question: Can Member States require terminal equipment to have specific technical features for privacy?
+  expected:
+    - {act: ePrivacy Directive, unit: article, number: "14"}
+- id: eprivacy-24
+  category: ePrivacy Directive
+  question: By when did Member States have to transpose the ePrivacy Directive?
+  expected:
+    - {act: ePrivacy Directive, unit: article, number: "17"}
+- id: eprivacy-25
+  category: ePrivacy Directive
+  question: Which earlier directive did the ePrivacy Directive repeal?
+  expected:
+    - {act: ePrivacy Directive, unit: article, number: "19"}
+- id: eprivacy-26
+  category: ePrivacy Directive
+  question: Is my internet provider allowed to listen in on or store my communications?
+  expected:
+    - {act: ePrivacy Directive, unit: article, number: "5", paragraph: "1"}
 
 # --- Cross-document / multi-hop ---------------------------------------------
 - id: xdoc-01
@@ -306,6 +1455,132 @@
     - {act: Data Act, unit: article, number: "20", optional: true}
     - {act: Data Act, unit: article, number: "21", optional: true}
     - {act: Data Act, unit: article, number: "22", optional: true}
+- id: xdoc-07
+  category: cross-document
+  question: A telecoms operator suffers a data breach. Does it notify under the ePrivacy Directive or the GDPR?
+  expected:
+    - {act: ePrivacy Directive, unit: article, number: "4"}
+    - {act: GDPR, unit: article, number: "95"}
+    - {act: GDPR, unit: article, number: "33", optional: true}
+- id: xdoc-08
+  category: cross-document
+  question: Does consent in the ePrivacy Directive mean the same as consent under the GDPR?
+  expected:
+    - {act: ePrivacy Directive, unit: article, number: "2"}
+    - {act: GDPR, unit: article, number: "4", paragraph: "11"}
+    - {act: GDPR, unit: article, number: "94", optional: true}
+    - {act: GDPR, unit: article, number: "7", optional: true}
+  note: ePrivacy refers to consent under Directive 95/46/EC; GDPR Art. 94(2) redirects that to the GDPR.
+- id: xdoc-09
+  category: cross-document
+  question: How does the fundamental rights impact assessment under the AI Act relate to a DPIA under the GDPR?
+  expected:
+    - {act: AI Act, unit: article, number: "27"}
+    - {act: GDPR, unit: article, number: "35"}
+- id: xdoc-10
+  category: cross-document
+  question: How does the AI Act's right to an explanation relate to the GDPR rules on automated decisions?
+  expected:
+    - {act: AI Act, unit: article, number: "86"}
+    - {act: GDPR, unit: article, number: "22"}
+- id: xdoc-11
+  category: cross-document
+  question: How does reusing personal data in an AI sandbox fit with the GDPR's purpose limitation principle?
+  expected:
+    - {act: AI Act, unit: article, number: "59"}
+    - {act: GDPR, unit: article, number: "5", optional: true}
+    - {act: GDPR, unit: article, number: "6", optional: true}
+- id: xdoc-12
+  category: cross-document
+  question: How do the Data Act and the DGA protect non-personal data against unlawful access by foreign governments?
+  expected:
+    - {act: Data Act, unit: article, number: "32"}
+    - {act: Data Governance Act, unit: article, number: "31"}
+- id: xdoc-13
+  category: cross-document
+  question: What role does the European Data Innovation Board play under the DGA and under the Data Act?
+  expected:
+    - {act: Data Governance Act, unit: article, number: "30"}
+    - {act: Data Act, unit: article, number: "42"}
+- id: xdoc-14
+  category: cross-document
+  question: How are penalties set under the Data Act and the DGA compared to the GDPR's fixed fine caps?
+  expected:
+    - {act: Data Act, unit: article, number: "40"}
+    - {act: Data Governance Act, unit: article, number: "34"}
+    - {act: GDPR, unit: article, number: "83", optional: true}
+- id: xdoc-15
+  category: cross-document
+  question: If a user who is not the data subject requests personal data from a connected product, what GDPR requirement must be met?
+  expected:
+    - {act: Data Act, unit: article, number: "4"}
+    - {act: GDPR, unit: article, number: "6"}
+- id: xdoc-16
+  category: cross-document
+  question: Compare the record-keeping duties of the GDPR with the logging duties for high-risk AI systems.
+  expected:
+    - {act: GDPR, unit: article, number: "30"}
+    - {act: AI Act, unit: article, number: "12"}
+- id: xdoc-17
+  category: cross-document
+  question: How does human oversight under the AI Act compare to the right to human intervention under the GDPR?
+  expected:
+    - {act: AI Act, unit: article, number: "14"}
+    - {act: GDPR, unit: article, number: "22"}
+- id: xdoc-18
+  category: cross-document
+  question: Compare the right to lodge a complaint under the GDPR and under the AI Act.
+  expected:
+    - {act: GDPR, unit: article, number: "77"}
+    - {act: AI Act, unit: article, number: "85"}
+- id: xdoc-19
+  category: cross-document
+  question: Biometric data is special-category data under the GDPR. What does the AI Act prohibit regarding biometric categorisation?
+  expected:
+    - {act: GDPR, unit: article, number: "9"}
+    - {act: AI Act, unit: article, number: "5"}
+- id: xdoc-20
+  category: cross-document
+  question: How do the GDPR's information duties compare with the AI Act's transparency obligations towards people interacting with AI?
+  expected:
+    - {act: GDPR, unit: article, number: "13"}
+    - {act: AI Act, unit: article, number: "50"}
+- id: xdoc-21
+  category: cross-document
+  question: How do data protection by design under the GDPR and the data governance requirements for high-risk AI fit together?
+  expected:
+    - {act: GDPR, unit: article, number: "25"}
+    - {act: AI Act, unit: article, number: "10"}
+- id: xdoc-22
+  category: cross-document
+  question: Does the Data Governance Act change anything about the GDPR's rules on personal data?
+  expected:
+    - {act: Data Governance Act, unit: article, number: "1"}
+- id: xdoc-23
+  category: cross-document
+  question: How does data portability under the GDPR differ from the cloud switching rights in the Data Act?
+  expected:
+    - {act: GDPR, unit: article, number: "20"}
+    - {act: Data Act, unit: article, number: "23"}
+    - {act: Data Act, unit: article, number: "25", optional: true}
+- id: xdoc-24
+  category: cross-document
+  question: How do consent for data altruism under the DGA and consent under the GDPR relate?
+  expected:
+    - {act: Data Governance Act, unit: article, number: "25"}
+    - {act: GDPR, unit: article, number: "7"}
+    - {act: Data Governance Act, unit: article, number: "21", optional: true}
+- id: xdoc-25
+  category: cross-document
+  question: Does the AI Act change the application of the GDPR or the ePrivacy Directive?
+  expected:
+    - {act: AI Act, unit: article, number: "2", paragraph: "7"}
+- id: xdoc-26
+  category: cross-document
+  question: Both the GDPR and the AI Act involve a European board. How do the EDPB and the AI Board differ in their tasks?
+  expected:
+    - {act: GDPR, unit: article, number: "70"}
+    - {act: AI Act, unit: article, number: "66"}
 
 # --- Negative / out-of-scope ------------------------------------------------
 - id: neg-01
@@ -328,3 +1603,78 @@
   question: What does Article 150 of the GDPR say?
   expect_decline: true
   note: Doesn't exist, the GDPR has 99 articles.
+- id: neg-05
+  category: out-of-scope
+  question: What incident reporting deadlines does the NIS2 Directive set?
+  expect_decline: true
+  note: NIS2 is not in the corpus.
+- id: neg-06
+  category: out-of-scope
+  question: What vulnerability handling obligations does the Cyber Resilience Act impose on manufacturers?
+  expect_decline: true
+  note: The CRA is only referenced (AI Act Art. 42(3)), its text is not in the corpus.
+- id: neg-07
+  category: out-of-scope
+  question: Which obligations does the Digital Markets Act place on gatekeepers?
+  expect_decline: true
+  note: The DMA is not in the corpus; the Data Act only refers to gatekeepers.
+- id: neg-08
+  category: out-of-scope
+  question: What did the CJEU decide in the Schrems II judgment?
+  expect_decline: true
+  note: No case law in the corpus.
+- id: neg-09
+  category: out-of-scope
+  question: How high was the GDPR fine against Amazon imposed by the Luxembourg authority?
+  expect_decline: true
+  note: No enforcement decisions in the corpus.
+- id: neg-10
+  category: out-of-scope
+  question: What rights does the California Consumer Privacy Act give consumers?
+  expect_decline: true
+  note: Non-EU law.
+- id: neg-11
+  category: out-of-scope
+  question: What does Article 120 of the AI Act say?
+  expect_decline: true
+  note: Doesn't exist, the AI Act has 113 articles.
+- id: neg-12
+  category: out-of-scope
+  question: What does Article 60 of the Data Act regulate?
+  expect_decline: true
+  note: Doesn't exist, the Data Act has 50 articles.
+- id: neg-13
+  category: out-of-scope
+  question: Summarise Article 45 of the Data Governance Act.
+  expect_decline: true
+  note: Doesn't exist, the DGA has 38 articles.
+- id: neg-14
+  category: out-of-scope
+  question: What does the German Federal Data Protection Act say about video surveillance of public spaces?
+  expect_decline: true
+  note: National law, not in the corpus.
+- id: neg-15
+  category: out-of-scope
+  question: How do I file my income tax return in Germany?
+  expect_decline: true
+  note: Unrelated to the corpus.
+- id: neg-16
+  category: out-of-scope
+  question: What does the European Health Data Space Regulation say about secondary use of health data?
+  expect_decline: true
+  note: EHDS is not in the corpus.
+- id: neg-17
+  category: out-of-scope
+  question: What legal effect does eIDAS give to qualified electronic signatures?
+  expect_decline: true
+  note: eIDAS is not in the corpus.
+- id: neg-18
+  category: out-of-scope
+  question: What are the UK GDPR's rules for international data transfers after Brexit?
+  expect_decline: true
+  note: UK law, not in the corpus.
+- id: neg-19
+  category: out-of-scope
+  question: Does the proposed ePrivacy Regulation allow cookie walls?
+  expect_decline: true
+  note: The proposal is not in the corpus, only Directive 2002/58/EC.

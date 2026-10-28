@@ -21,10 +21,11 @@ from eurag.generation import (
     build_citations,
     build_messages,
     clean_citations,
+    debug_payload,
     fit_context,
 )
 from eurag.ollama_client import OllamaClient
-from eurag.retrieval import Retriever
+from eurag.retrieval import Hit, Retriever
 
 STATIC_DIR = Path(__file__).parent / "static"
 _CONFIG_SETTINGS = ("llm_model", "embed_model", "embed_dim", "top_k", "num_ctx", "answer_tokens", "temperature",
@@ -63,6 +64,7 @@ class AskRequest(BaseModel):
     question: str = Field(min_length=3, max_length=2000)
     acts: list[str] | None = Field(default=None, description="Restrict search to these acts (short names)")
     top_k: int | None = Field(default=None, ge=1, le=20)
+    debug: bool = Field(default=False, description="Include the retrieval trace and cited source texts (evals)")
 
 
 class Citation(BaseModel):
@@ -87,21 +89,23 @@ class AskResponse(BaseModel):
     declined: bool = Field(description="The model found no answer in the sources; citations are empty")
     model: str
     prompt_tokens: int | None = None
+    debug: dict | None = None
 
 
-async def _retrieve(request: Request, body: AskRequest):
+async def _retrieve(request: Request, body: AskRequest) -> tuple[list[Hit], list[Hit]]:
+    """All retrieved hits and the ones that fit the context budget."""
     hits = await request.app.state.retriever.search(body.question, body.acts, body.top_k)
     if not hits:
         raise HTTPException(404, "No relevant passages found. Has the ingest step run?")
     kept = fit_context(body.question, hits, request.app.state.settings)
     if len(kept) < len(hits):
         log.info("context budget: kept %d of %d retrieved chunks", len(kept), len(hits))
-    return kept
+    return hits, kept
 
 
 @app.post("/api/ask", response_model=AskResponse)
 async def ask(body: AskRequest, request: Request) -> AskResponse:
-    hits = await _retrieve(request, body)
+    retrieved, hits = await _retrieve(request, body)
     raw, prompt_tokens = await request.app.state.ollama.chat(build_messages(body.question, hits))
     answer, cited, declined = clean_citations(raw, len(hits))
     return AskResponse(
@@ -110,6 +114,7 @@ async def ask(body: AskRequest, request: Request) -> AskResponse:
         declined=declined,
         model=request.app.state.settings.llm_model,
         prompt_tokens=prompt_tokens,
+        debug=debug_payload(retrieved, hits, cited) if body.debug else None,
     )
 
 
@@ -123,7 +128,7 @@ async def ask_stream(body: AskRequest, request: Request) -> StreamingResponse:
 
     Tokens are held back until the decline marker is ruled out, so it never reaches the client.
     """
-    hits = await _retrieve(request, body)
+    _, hits = await _retrieve(request, body)
     ollama: OllamaClient = request.app.state.ollama
 
     async def events():
