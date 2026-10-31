@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     num_ctx: int = 8192
     answer_tokens: int = 1024  # reserved for the answer (num_predict)
     chars_per_token: float = 3.5  # conservative estimate for English legal text
-    temperature: float = 0.1
+    temperature: float = 0.0  # greedy: reproducible answers and eval runs
     request_timeout: float = 300.0
 
 
