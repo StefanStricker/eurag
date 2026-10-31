@@ -24,13 +24,13 @@ from eurag.generation import (
     debug_payload,
     fit_context,
 )
-from eurag.ollama_client import OllamaClient
+from eurag.ollama_client import OllamaClient, query_prefix
 from eurag.retrieval import Hit, Retriever
 
 STATIC_DIR = Path(__file__).parent / "static"
-_CONFIG_SETTINGS = ("llm_model", "embed_model", "embed_dim", "top_k", "num_ctx", "answer_tokens", "temperature",
-                    "chars_per_token")
-_RETRIEVAL_CONSTANTS = ("ARTICLE_BONUS", "EXPLICIT_SCORE", "EXPLICIT_MAX_PARTS", "RECITAL_EXPANSION_DEPTH",
+_CONFIG_SETTINGS = ("llm_model", "embed_model", "embed_dim", "top_k", "article_bonus", "num_ctx", "answer_tokens",
+                    "temperature", "chars_per_token")
+_RETRIEVAL_CONSTANTS = ("EXPLICIT_SCORE", "EXPLICIT_MAX_PARTS", "RECITAL_EXPANSION_DEPTH",
                         "RECITAL_EXPANSION_ARTICLES", "RECITAL_EXPANSION_MAX", "MAX_RANGE", "MAX_EXPLICIT_REFS")
 log = logging.getLogger("eurag.api")
 
@@ -116,6 +116,13 @@ async def ask(body: AskRequest, request: Request) -> AskResponse:
         prompt_tokens=prompt_tokens,
         debug=debug_payload(retrieved, hits, cited) if body.debug else None,
     )
+
+
+@app.post("/api/retrieve")
+async def retrieve(body: AskRequest, request: Request) -> dict:
+    """Retrieval only, no LLM call: the same trace as `debug` of /api/ask, without cited sources (evals)."""
+    retrieved, hits = await _retrieve(request, body)
+    return {"debug": debug_payload(retrieved, hits, [])}
 
 
 def _sse(event: str, data: object) -> str:
@@ -216,6 +223,7 @@ async def config(request: Request) -> dict:
     metadata = (await qdrant.get_collection(collection)).config.metadata or {}
     return {
         "settings": {name: getattr(settings, name) for name in _CONFIG_SETTINGS},
+        "embed_query_prefix": query_prefix(settings.embed_model),
         "retrieval": {name.lower(): getattr(retrieval, name) for name in _RETRIEVAL_CONSTANTS},
         "system_prompt_sha256": hashlib.sha256(SYSTEM_PROMPT.encode()).hexdigest()[:12],
         "index": {

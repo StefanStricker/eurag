@@ -12,6 +12,18 @@ from eurag.config import Settings
 
 log = logging.getLogger("eurag.ollama")
 
+# Query prefixes the embedding models were trained with (model name without tag -> prefix). Documents get none.
+QUERY_PREFIXES = {
+    "qwen3-embedding": (
+        "Instruct: Given a question about EU data law, retrieve the legal provisions that answer it\nQuery:"
+    ),
+    "snowflake-arctic-embed2": "query: ",
+}
+
+
+def query_prefix(model: str) -> str:
+    return QUERY_PREFIXES.get(model.split(":")[0], "")
+
 
 class OllamaClient:
     def __init__(self, settings: Settings):
@@ -21,7 +33,10 @@ class OllamaClient:
     async def aclose(self) -> None:
         await self._http.aclose()
 
-    async def embed(self, texts: list[str]) -> list[list[float]]:
+    async def embed(self, texts: list[str], query: bool = False) -> list[list[float]]:
+        """Embed chunk texts, or search queries with the model's query prefix."""
+        if query:
+            texts = [query_prefix(self.settings.embed_model) + t for t in texts]
         r = await self._http.post("/api/embed", json={"model": self.settings.embed_model, "input": texts})
         r.raise_for_status()
         return r.json()["embeddings"]

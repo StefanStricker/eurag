@@ -7,6 +7,7 @@
     uv run evals/run_evals.py check                       # validate questions.yaml against the index
     uv run evals/run_evals.py run --label baseline        # ask all questions, save evals/runs/<id>.json, score it
     uv run evals/run_evals.py run --ids gdpr-01 --label x # subset (--ids / --category)
+    uv run evals/run_evals.py run --retrieval-only --label e-qwen3  # retrieval metrics only, no LLM (seconds)
     uv run evals/run_evals.py judge baseline              # local LLM grades the answers (resumable)
     uv run evals/run_evals.py score hybrid --vs baseline  # rescore and compare two runs
 
@@ -193,12 +194,28 @@ METRICS = [
     Metric("correct", answerable, m_correct, "judge: correct = 1, partial = 0.5, wrong = 0"),
     Metric("faithful", answerable, m_faithful, "judge: every claim is supported by the cited sources"),
 ]
+RETRIEVAL_METRICS = {"retrieved_recall", "context_recall", "mrr"}  # the only ones a retrieval-only run has
+
+
+def scored(m: Metric, q: dict, r: dict) -> bool:
+    return m.applies(q) and (m.key in RETRIEVAL_METRICS or not r.get("retrieval_only"))
 
 
 def outcome(q: dict, r: dict) -> str:
-    """ok, or where the answer went wrong: error / declined / answered / retrieval_miss / budget_cut / generation_miss."""
+    """ok, or where the answer went wrong: error / declined / answered / retrieval_miss / budget_cut / generation_miss.
+
+    Retrieval-only results stop at the prompt: ok / retrieval_miss / budget_cut, n/a for out-of-scope questions."""
     if r.get("status") not in (200, 404):
         return "error"
+    if r.get("retrieval_only"):
+        if not answerable(q):
+            return "n/a"
+        missing = expected_units(q, required_only=True)
+        if missing - set(retrieved_units(r) or []):
+            return "retrieval_miss"
+        if missing - set(retrieved_units(r, in_context_only=True) or []):
+            return "budget_cut"
+        return "ok"
     if not answerable(q):
         return "ok" if is_decline(r) else "answered"
     missing = expected_units(q, required_only=True) - cited_units(r)
@@ -220,7 +237,7 @@ def score_run(run: dict, questions: list[dict]) -> dict:
     results = {r["id"]: r for r in run["results"]}
     asked = [q for q in questions if q["id"] in results]
     per_q = {
-        q["id"]: {m.key: m.fn(q, results[q["id"]]) for m in METRICS if m.applies(q)}
+        q["id"]: {m.key: m.fn(q, results[q["id"]]) for m in METRICS if scored(m, q, results[q["id"]])}
         | {"outcome": outcome(q, results[q["id"]])}
         for q in asked
     }
@@ -239,6 +256,9 @@ def score_run(run: dict, questions: list[dict]) -> dict:
     by_cat: dict[str, list[str]] = {}
     for q in asked:
         by_cat.setdefault(q["category"], []).append(q["id"])
+    # Cross-cutting slice: annexes are rarely retrieved and spread over all categories.
+    by_cat["annex questions"] = [q["id"] for q in asked if answerable(q) and any(e["unit"] == "annex"
+                                                                                 for e in q["expected"])]
     return {
         "scored_at": now(),
         "questions_sha256": questions_sha(),
@@ -325,17 +345,21 @@ def _git(*args: str) -> str | None:
         return None
 
 
-def ask(client: httpx.Client, q: dict, top_k: int | None) -> dict:
+def ask(client: httpx.Client, q: dict, top_k: int | None, retrieval_only: bool = False) -> dict:
     body = {"question": q["question"], "debug": True} | ({"top_k": top_k} if top_k else {})
     start = time.perf_counter()
     try:
-        resp = client.post("/api/ask", json=body)
+        resp = client.post("/api/retrieve" if retrieval_only else "/api/ask", json=body)
         latency = time.perf_counter() - start
         data = resp.json() if resp.headers.get("content-type", "").startswith("application/json") else {}
     except httpx.HTTPError as exc:
         return {"id": q["id"], "status": None, "error": repr(exc), "answer": "", "citations": [], "latency_s": None}
     result = {"id": q["id"], "status": resp.status_code, "latency_s": round(latency, 2)}
-    if resp.status_code == 200:
+    if retrieval_only:
+        result["retrieval_only"] = True
+    if resp.status_code == 200 and retrieval_only:
+        result["debug"] = data.get("debug")
+    elif resp.status_code == 200:
         result |= {k: data.get(k) for k in ("answer", "citations", "declined", "prompt_tokens", "debug")}
     else:
         result |= {"error": data.get("detail", resp.text[:300]), "answer": "", "citations": []}
@@ -370,7 +394,7 @@ def cmd_run(args) -> None:
         results: list[dict] = []
 
         def task(q):
-            r = ask(client, q, args.top_k)
+            r = ask(client, q, args.top_k, args.retrieval_only)
             results.append(r)
             status = "ok" if r["status"] == 200 else f"status={r['status']} {r.get('error', '')}"
             print(f"[{len(results):>3}/{len(questions)}] {q['id']:<14} {r['latency_s'] or '-':>6}s  {status}", flush=True)
@@ -390,6 +414,7 @@ def cmd_run(args) -> None:
         "duration_s": round((datetime.now(timezone.utc) - started).total_seconds(), 1),
         "api": args.api,
         "top_k": args.top_k,
+        "retrieval_only": args.retrieval_only,
         "git_commit": _git("rev-parse", "--short", "HEAD"),
         "git_dirty": bool(_git("status", "--porcelain", "app", "data")),
         "questions_sha256": questions_sha(),
@@ -467,6 +492,8 @@ def cmd_judge(args) -> None:
     qmap = {q["id"]: q for q in questions}
     path = find_run(args.run)
     run = json.loads(path.read_text())
+    if run.get("retrieval_only"):
+        sys.exit(f"{path.stem} is a retrieval-only run, there are no answers to judge.")
     todo = [r for r in run["results"]
             if r["id"] in qmap and answerable(qmap[r["id"]]) and r.get("status") == 200 and "judge" not in r]
     if any(not r.get("debug") for r in todo):
@@ -556,6 +583,7 @@ def main() -> None:
     run.add_argument("--ids", nargs="+", help="only these question ids")
     run.add_argument("--category", nargs="+", help="only these categories")
     run.add_argument("--top-k", type=int, help="override the API's top_k")
+    run.add_argument("--retrieval-only", action="store_true", help="only retrieve (/api/retrieve), no LLM answers")
     run.add_argument("--concurrency", type=int, default=1, help="parallel requests (default 1, one GPU)")
     run.add_argument("--timeout", type=float, default=300, help="per-request timeout in seconds")
     run.set_defaults(func=cmd_run)

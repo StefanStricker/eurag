@@ -11,7 +11,6 @@ from qdrant_client import AsyncQdrantClient, models
 from eurag.config import Settings
 from eurag.ollama_client import OllamaClient
 
-ARTICLE_BONUS = 0.02
 EXPLICIT_SCORE = 1.0
 EXPLICIT_MAX_PARTS = 3  # parts of an explicitly named article kept when no paragraph is given
 # Recitals explain the binding articles but rarely share their wording. For the top-ranked
@@ -168,7 +167,7 @@ class Retriever:
 
     async def search(self, question: str, acts: list[str] | None = None, top_k: int | None = None) -> list[Hit]:
         top_k = top_k or self.settings.top_k
-        [vector] = await self.ollama.embed([question])
+        [vector] = await self.ollama.embed([question], query=True)
         result = await self.qdrant.query_points(
             self.settings.collection,
             query=vector,
@@ -176,8 +175,9 @@ class Retriever:
             limit=top_k * 2,
             with_payload=True,
         )
+        bonus = self.settings.article_bonus
         hits = [
-            Hit(p.score + (ARTICLE_BONUS if p.payload["unit_type"] == "article" else 0.0), p.payload, str(p.id))
+            Hit(p.score + (bonus if p.payload["unit_type"] == "article" else 0.0), p.payload, str(p.id))
             for p in result.points
         ]
         hits.sort(key=lambda h: h.score, reverse=True)

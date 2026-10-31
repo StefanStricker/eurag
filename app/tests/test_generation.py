@@ -1,3 +1,8 @@
+import asyncio
+import json
+
+import httpx
+
 from eurag.config import Settings
 from eurag.generation import (
     DECLINE_FALLBACK,
@@ -9,6 +14,7 @@ from eurag.generation import (
     debug_payload,
     fit_context,
 )
+from eurag.ollama_client import OllamaClient, query_prefix
 from eurag.retrieval import Hit, covers_paragraph, explicit_refs, mentioned_acts
 
 
@@ -175,3 +181,28 @@ def test_debug_payload_marks_context_and_cited_texts():
     debug = debug_payload(retrieved, kept, cited=[2])
     assert [(r["number"], r["in_context"]) for r in debug["retrieved"]] == [("6", True), ("7", False), ("9", True)]
     assert debug["sources"] == [{"id": 2, "text": "GDPR – Article 9\nBody 9"}]
+
+
+def test_query_prefix_by_model_name():
+    assert query_prefix("bge-m3") == ""
+    assert query_prefix("snowflake-arctic-embed2:latest") == "query: "
+    assert query_prefix("qwen3-embedding:0.6b").startswith("Instruct: ")
+    assert query_prefix("qwen3-embedding:0.6b").endswith("\nQuery:")
+
+
+def test_embed_prefixes_queries_only():
+    sent: list[list[str]] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        sent.append(json.loads(request.content)["input"])
+        return httpx.Response(200, json={"embeddings": [[0.0]]})
+
+    async def embed_both() -> None:
+        client = OllamaClient(Settings(embed_model="snowflake-arctic-embed2"))
+        client._http = httpx.AsyncClient(base_url="http://ollama", transport=httpx.MockTransport(handler))
+        await client.embed(["chunk"])
+        await client.embed(["question?"], query=True)
+        await client.aclose()
+
+    asyncio.run(embed_both())
+    assert sent == [["chunk"], ["query: question?"]]
