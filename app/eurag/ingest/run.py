@@ -1,7 +1,7 @@
 """Index the PDFs in DATA_DIR into Qdrant.
 
 The index is a physical collection `<collection>_<fingerprint>_<build time>` behind the alias
-`settings.collection`. The fingerprint covers the embedding model, chunker version, acts.yaml and
+`settings.collection`. The fingerprint covers the dense and sparse models, chunker version, acts.yaml and
 the PDFs; when it changes, a new collection is built and the alias is switched atomically, so the
 API keeps serving the old index until the new one is complete.
 
@@ -26,6 +26,7 @@ from eurag.config import Settings, get_settings
 from eurag.ingest.chunker import CHUNKER_VERSION, ActInfo, Chunk, Unit, chunk_units, merge_recitals, parse_units
 from eurag.ingest.pdf_extract import extract_lines
 from eurag.ollama_client import OllamaClient
+from eurag.sparse import DENSE, SPARSE, SparseEncoder
 
 log = logging.getLogger("eurag.ingest")
 BATCH = 32
@@ -62,7 +63,7 @@ def load_chunks() -> list[Chunk]:
 def fingerprint(settings: Settings) -> str:
     """Hash of everything that determines the index contents."""
     h = hashlib.sha256()
-    h.update(f"{settings.embed_model}\0{settings.embed_dim}\0{CHUNKER_VERSION}\0".encode())
+    h.update(f"{settings.embed_model}\0{settings.embed_dim}\0{settings.sparse_model}\0{CHUNKER_VERSION}\0".encode())
     registry_file = settings.data_dir / "acts.yaml"
     h.update(registry_file.read_bytes())
     registry = yaml.safe_load(registry_file.read_text())
@@ -80,10 +81,17 @@ def point_id(c: Chunk) -> str:
 
 async def _build(qdrant: AsyncQdrantClient, ollama: OllamaClient, name: str, fp: str, chunks: list[Chunk]) -> None:
     settings = get_settings()
+    sparse = SparseEncoder(settings.sparse_model)
     await qdrant.create_collection(
         name,
-        vectors_config=models.VectorParams(size=settings.embed_dim, distance=models.Distance.COSINE),
-        metadata={"fingerprint": fp, "chunker_version": CHUNKER_VERSION, "embed_model": settings.embed_model},
+        vectors_config={DENSE: models.VectorParams(size=settings.embed_dim, distance=models.Distance.COSINE)},
+        sparse_vectors_config={SPARSE: models.SparseVectorParams(modifier=models.Modifier.IDF)},
+        metadata={
+            "fingerprint": fp,
+            "chunker_version": CHUNKER_VERSION,
+            "embed_model": settings.embed_model,
+            "sparse_model": settings.sparse_model,
+        },
     )
     for field in ("act", "unit_type", "number"):
         await qdrant.create_payload_index(name, field, models.PayloadSchemaType.KEYWORD)
@@ -91,11 +99,12 @@ async def _build(qdrant: AsyncQdrantClient, ollama: OllamaClient, name: str, fp:
     for i in range(0, len(chunks), BATCH):
         batch = chunks[i : i + BATCH]
         vectors = await ollama.embed([c.text for c in batch])
+        sparse_vectors = sparse.documents([c.text for c in batch])
         await qdrant.upsert(
             name,
             points=[
-                models.PointStruct(id=point_id(c), vector=v, payload=c.to_payload())
-                for c, v in zip(batch, vectors, strict=True)
+                models.PointStruct(id=point_id(c), vector={DENSE: v, SPARSE: sv}, payload=c.to_payload())
+                for c, v, sv in zip(batch, vectors, sparse_vectors, strict=True)
             ],
         )
         log.info("embedded %d/%d", min(i + BATCH, len(chunks)), len(chunks))

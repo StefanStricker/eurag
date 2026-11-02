@@ -8,6 +8,9 @@ x-app: &app
     OLLAMA_URL: http://ollama:11434
     QDRANT_URL: http://qdrant:6333
     DATA_DIR: /data
+    # From the shell or .env, for A/B runs without editing .env
+    RETRIEVAL_MODE: ${RETRIEVAL_MODE:-dense}
+    HYBRID_DENSE_WEIGHT: ${HYBRID_DENSE_WEIGHT:-1.0}
   volumes:
     - ./data:/data:ro
 

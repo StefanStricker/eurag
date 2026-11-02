@@ -1,4 +1,4 @@
-"""Vector search over the indexed acts, plus direct lookup of explicitly cited articles."""
+"""Dense or hybrid (dense + BM25, RRF) search over the indexed acts, plus direct lookup of explicitly cited articles."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ from qdrant_client import AsyncQdrantClient, models
 
 from eurag.config import Settings
 from eurag.ollama_client import OllamaClient
+from eurag.sparse import DENSE, SPARSE, SparseEncoder
 
 EXPLICIT_SCORE = 1.0
 EXPLICIT_MAX_PARTS = 3  # parts of an explicitly named article kept when no paragraph is given
@@ -126,6 +127,7 @@ class Retriever:
         self.settings = settings
         self.qdrant = qdrant
         self.ollama = ollama
+        self.sparse = SparseEncoder(settings.sparse_model) if settings.retrieval_mode == "hybrid" else None
 
     async def _lookup_unit(
         self, act: str, unit_type: str, number: str, paragraph: str | None, vector: list[float]
@@ -144,7 +146,12 @@ class Retriever:
             points = [p for p in points if covers_paragraph(p.payload["paragraphs"], paragraph)]
         if not points:
             result = await self.qdrant.query_points(
-                self.settings.collection, query=vector, query_filter=unit, limit=EXPLICIT_MAX_PARTS, with_payload=True
+                self.settings.collection,
+                query=vector,
+                using=DENSE,
+                query_filter=unit,
+                limit=EXPLICIT_MAX_PARTS,
+                with_payload=True,
             )
             points = result.points
         points.sort(key=lambda p: p.payload["part"])
@@ -154,6 +161,7 @@ class Retriever:
         result = await self.qdrant.query_points(
             self.settings.collection,
             query=recital.id,
+            using=DENSE,
             query_filter=models.Filter(
                 must=[
                     models.FieldCondition(key="act", match=models.MatchValue(value=recital.payload["act"])),
@@ -165,22 +173,46 @@ class Retriever:
         )
         return [Hit(recital.score * p.score, p.payload, str(p.id)) for p in result.points]
 
+    async def _candidates(self, question: str, vector: list[float], acts: list[str] | None, limit: int) -> list[Hit]:
+        """Ranked search hits. Dense: cosine plus the article bonus. Hybrid: RRF of dense and BM25, no bonus
+        (RRF scores are rank-based, ~1/(rrf_k + rank), so a cosine-scale bonus would override the fusion)."""
+        flt = _act_filter(acts)
+        if self.sparse is None:
+            result = await self.qdrant.query_points(
+                self.settings.collection, query=vector, using=DENSE, query_filter=flt, limit=limit, with_payload=True
+            )
+            bonus = self.settings.article_bonus
+            hits = [
+                Hit(p.score + (bonus if p.payload["unit_type"] == "article" else 0.0), p.payload, str(p.id))
+                for p in result.points
+            ]
+            hits.sort(key=lambda h: h.score, reverse=True)
+            return hits
+
+        n = max(self.settings.hybrid_prefetch, limit)
+        dense, sparse = await self.qdrant.query_batch_points(
+            self.settings.collection,
+            requests=[
+                models.QueryRequest(query=vector, using=DENSE, filter=flt, limit=n, with_payload=True),
+                models.QueryRequest(
+                    query=self.sparse.query(question), using=SPARSE, filter=flt, limit=n, with_payload=True
+                ),
+            ],
+        )
+        # Weighted RRF, fused here: Qdrant's RRF weights rescale ranks rather than contributions, so a
+        # large dense weight flattens the dense ranking and leaves the order to BM25.
+        k = self.settings.rrf_k
+        fused: dict[str, Hit] = {}
+        for weight, result in ((self.settings.hybrid_dense_weight, dense), (1.0, sparse)):
+            for rank, p in enumerate(result.points):  # rank from 0, as Qdrant's RRF
+                hit = fused.setdefault(str(p.id), Hit(0.0, p.payload, str(p.id)))
+                hit.score += weight / (k + rank)
+        return sorted(fused.values(), key=lambda h: h.score, reverse=True)[:limit]
+
     async def search(self, question: str, acts: list[str] | None = None, top_k: int | None = None) -> list[Hit]:
         top_k = top_k or self.settings.top_k
         [vector] = await self.ollama.embed([question], query=True)
-        result = await self.qdrant.query_points(
-            self.settings.collection,
-            query=vector,
-            query_filter=_act_filter(acts),
-            limit=top_k * 2,
-            with_payload=True,
-        )
-        bonus = self.settings.article_bonus
-        hits = [
-            Hit(p.score + (bonus if p.payload["unit_type"] == "article" else 0.0), p.payload, str(p.id))
-            for p in result.points
-        ]
-        hits.sort(key=lambda h: h.score, reverse=True)
+        hits = await self._candidates(question, vector, acts, top_k * 2)
 
         explicit: list[Hit] = []
         for act, unit_type, number, paragraph in explicit_refs(question, acts):

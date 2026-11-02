@@ -28,7 +28,8 @@ from eurag.ollama_client import OllamaClient, query_prefix
 from eurag.retrieval import Hit, Retriever
 
 STATIC_DIR = Path(__file__).parent / "static"
-_CONFIG_SETTINGS = ("llm_model", "embed_model", "embed_dim", "top_k", "article_bonus", "num_ctx", "answer_tokens",
+_CONFIG_SETTINGS = ("llm_model", "embed_model", "embed_dim", "sparse_model", "retrieval_mode", "hybrid_prefetch",
+                    "rrf_k", "hybrid_dense_weight", "top_k", "article_bonus", "num_ctx", "answer_tokens",
                     "temperature", "chars_per_token")
 _RETRIEVAL_CONSTANTS = ("EXPLICIT_SCORE", "EXPLICIT_MAX_PARTS", "RECITAL_EXPANSION_DEPTH",
                         "RECITAL_EXPANSION_ARTICLES", "RECITAL_EXPANSION_MAX", "MAX_RANGE", "MAX_EXPLICIT_REFS")
@@ -232,6 +233,7 @@ async def config(request: Request) -> dict:
             "fingerprint": (metadata.get("fingerprint") or "")[:12] or None,
             "chunker_version": metadata.get("chunker_version"),
             "embed_model": metadata.get("embed_model"),
+            "sparse_model": metadata.get("sparse_model"),
         },
     }
 
