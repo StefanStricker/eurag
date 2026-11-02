@@ -35,23 +35,24 @@ class OllamaClient:
 
     async def embed(self, texts: list[str], query: bool = False) -> list[list[float]]:
         """Embed chunk texts, or search queries with the model's query prefix."""
+        body: dict = {"model": self.settings.embed_model, "input": texts}
         if query:
-            texts = [query_prefix(self.settings.embed_model) + t for t in texts]
-        r = await self._http.post("/api/embed", json={"model": self.settings.embed_model, "input": texts})
+            body["input"] = [query_prefix(self.settings.embed_model) + t for t in texts]
+            if self.settings.query_embed_num_gpu >= 0:
+                body["options"] = {"num_gpu": self.settings.query_embed_num_gpu}
+        r = await self._http.post("/api/embed", json=body)
         r.raise_for_status()
         return r.json()["embeddings"]
 
     def _chat_body(self, messages: list[dict], stream: bool) -> dict:
-        return {
-            "model": self.settings.llm_model,
-            "messages": messages,
-            "stream": stream,
-            "options": {
-                "temperature": self.settings.temperature,
-                "num_ctx": self.settings.num_ctx,
-                "num_predict": self.settings.answer_tokens,
-            },
+        options = {
+            "temperature": self.settings.temperature,
+            "num_ctx": self.settings.num_ctx,
+            "num_predict": self.settings.answer_tokens,
         }
+        if self.settings.llm_num_gpu >= 0:
+            options["num_gpu"] = self.settings.llm_num_gpu
+        return {"model": self.settings.llm_model, "messages": messages, "stream": stream, "options": options}
 
     def _prompt_tokens(self, data: dict) -> int | None:
         """Prompt size reported by Ollama; warns when it is close to the context window (likely truncated)."""

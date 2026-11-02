@@ -1,4 +1,5 @@
-"""Dense or hybrid (dense + BM25, RRF) search over the indexed acts, plus direct lookup of explicitly cited articles."""
+"""Dense or hybrid (dense + BM25, RRF) search over the indexed acts, optionally reranked by a cross-encoder,
+plus direct lookup of explicitly cited articles."""
 
 from __future__ import annotations
 
@@ -10,6 +11,7 @@ from qdrant_client import AsyncQdrantClient, models
 
 from eurag.config import Settings
 from eurag.ollama_client import OllamaClient
+from eurag.rerank import Reranker
 from eurag.sparse import DENSE, SPARSE, SparseEncoder
 
 EXPLICIT_SCORE = 1.0
@@ -128,6 +130,7 @@ class Retriever:
         self.qdrant = qdrant
         self.ollama = ollama
         self.sparse = SparseEncoder(settings.sparse_model) if settings.retrieval_mode == "hybrid" else None
+        self.reranker = Reranker(settings.rerank_model, settings.rerank_gpu_mem_gb) if settings.rerank else None
 
     async def _lookup_unit(
         self, act: str, unit_type: str, number: str, paragraph: str | None, vector: list[float]
@@ -209,10 +212,34 @@ class Retriever:
                 hit.score += weight / (k + rank)
         return sorted(fused.values(), key=lambda h: h.score, reverse=True)[:limit]
 
+    async def _rerank(self, question: str, hits: list[Hit]) -> list[Hit]:
+        """Hits re-sorted by cross-encoder score (plus `rerank_article_bonus` for articles), which replaces the
+        search score. With `rerank_search_weight` > 0 the order is an RRF of the rerank and the search ranking
+        instead, so a confident search hit the reranker is unsure about is not dropped."""
+        if not hits:
+            return hits
+        scores = await asyncio.to_thread(self.reranker.scores, question, [h.payload["text"] for h in hits])
+        bonus = self.settings.rerank_article_bonus
+        reranked = [
+            Hit(score + (bonus if h.payload["unit_type"] == "article" else 0.0), h.payload, h.id)
+            for h, score in zip(hits, scores)
+        ]
+        order = sorted(range(len(hits)), key=lambda i: reranked[i].score, reverse=True)
+        if (w := self.settings.rerank_search_weight) > 0:  # `hits` is in search order
+            k = self.settings.rrf_k
+            for rank, i in enumerate(order):
+                reranked[i].score = 1 / (k + rank) + w / (k + i)
+            order.sort(key=lambda i: reranked[i].score, reverse=True)
+        return [reranked[i] for i in order]
+
     async def search(self, question: str, acts: list[str] | None = None, top_k: int | None = None) -> list[Hit]:
         top_k = top_k or self.settings.top_k
         [vector] = await self.ollama.embed([question], query=True)
-        hits = await self._candidates(question, vector, acts, top_k * 2)
+        if self.reranker is None:
+            hits = await self._candidates(question, vector, acts, top_k * 2)
+        else:
+            candidates = await self._candidates(question, vector, acts, self.settings.rerank_candidates)
+            hits = await self._rerank(question, candidates)
 
         explicit: list[Hit] = []
         for act, unit_type, number, paragraph in explicit_refs(question, acts):

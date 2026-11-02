@@ -11,6 +11,12 @@ x-app: &app
     # From the shell or .env, for A/B runs without editing .env
     RETRIEVAL_MODE: ${RETRIEVAL_MODE:-dense}
     HYBRID_DENSE_WEIGHT: ${HYBRID_DENSE_WEIGHT:-1.0}
+    RERANK: ${RERANK:-false}
+    RERANK_CANDIDATES: ${RERANK_CANDIDATES:-30}
+    RERANK_ARTICLE_BONUS: ${RERANK_ARTICLE_BONUS:-0.0}
+    RERANK_SEARCH_WEIGHT: ${RERANK_SEARCH_WEIGHT:-0.0}
+    QUERY_EMBED_NUM_GPU: ${QUERY_EMBED_NUM_GPU:--1}
+    LLM_NUM_GPU: ${LLM_NUM_GPU:--1}
   volumes:
     - ./data:/data:ro
 
@@ -73,6 +79,13 @@ services:
     <<: *app
     ports:
       - "${API_PORT:-8000}:8000"
+    deploy:  # the reranker runs on the GPU
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
     depends_on:
       ingest:
         condition: service_completed_successfully

@@ -12,6 +12,10 @@ COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --extra dev --no-install-project
 # BM25 model for hybrid search (tokenizer + stopwords, no weights), baked in so containers start offline
 RUN python -c "from fastembed import SparseTextEmbedding; SparseTextEmbedding('Qdrant/bm25')"
+# Default reranker (fp16 ONNX, 1.1 GB; registration as in eurag/rerank.py), downloaded only
+RUN python -c "from fastembed.common.model_description import ModelSource; \
+from fastembed.rerank.cross_encoder import TextCrossEncoder as T; r = 'onnx-community/bge-reranker-v2-m3-ONNX'; \
+T.add_custom_model(r, sources=ModelSource(hf=r), model_file='onnx/model_fp16.onnx', size_in_gb=1.14); T(r, lazy_load=True)"
 COPY eurag ./eurag
 RUN uv sync --frozen --extra dev --no-editable
 
