@@ -8,3 +8,4 @@ docs/
 *.egg-info/
 .ruff_cache/
 .mypy_cache/
+runs/
