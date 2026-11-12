@@ -107,8 +107,10 @@ def _join_hyphenated(lines: list[Line]) -> list[Line]:
             prev = out[-1]
             out[-1] = Line(prev.page, prev.text[:-1] + line.text)
         elif out and out[-1].text.endswith("-") and line.text[:1].islower():
+            # A hard hyphen at a line end is part of a compound ("non-personal", "cross-border"):
+            # these PDFs break words with soft hyphens, so the hyphen is kept.
             prev = out[-1]
-            out[-1] = Line(prev.page, prev.text[:-1] + line.text)
+            out[-1] = Line(prev.page, prev.text + line.text)
         else:
             out.append(line)
     return out

@@ -6,7 +6,7 @@ import pytest
 import yaml
 
 from eurag.ingest.chunker import MAX_CHARS, chunk_units, parse_units
-from eurag.ingest.pdf_extract import Line, extract_lines
+from eurag.ingest.pdf_extract import Line, _join_hyphenated, extract_lines
 from eurag.ingest.run import load_act
 
 # (file, recitals, articles, annexes, inserted articles) of the current texts (EUR-Lex consolidated
@@ -134,3 +134,14 @@ def test_parse_units_consolidated_synthetic():
     units = parse_units(lines)
     assert [u.number for u in units] == ["1", "1a", "2"]
     assert units[0].lines == ["Text referring to", "Article 3", "of another act."]
+
+
+def test_join_hyphenated_keeps_compound_hyphens():
+    lines = [Line(1, "non-"), Line(1, "personal data and per\xad"), Line(1, "sonal data, see"), Line(1, "Article-"), Line(1, "Article 5")]
+    assert [ln.text for ln in _join_hyphenated(lines)] == ["non-personal data and personal data, see", "Article-", "Article 5"]
+
+
+def test_no_merged_compounds(data_dir):
+    text = " ".join(" ".join(u.lines) for u in _units(data_dir, "DGA.pdf"))
+    assert "non-personal" in text
+    assert not re.search(r"\b(nonpersonal|crossborder|thirdcountry)\b", text)

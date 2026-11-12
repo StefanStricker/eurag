@@ -75,7 +75,7 @@ Set in `.env` (full list in `app/eurag/config.py`). The most relevant:
 | `RERANK` | `false` | Cross-encoder reranking. On 8 GB also set `QUERY_EMBED_NUM_GPU=0` and `LLM_NUM_GPU=99` |
 | `NUM_CTX` / `ANSWER_TOKENS` | `8192` / `1024` | Context window and answer reserve |
 | `TEMPERATURE` | `0` | Greedy, for reproducible answers |
-| `API_PORT`, `QDRANT_PORT`, `OLLAMA_PORT` | `8000`, `6333`, `11434` | Host ports |
+| `API_PORT`, `QDRANT_PORT`, `OLLAMA_PORT` | `8000`, `6333`, `11434` | Host ports (bound to 127.0.0.1 only) |
 
 ## Evaluation
 

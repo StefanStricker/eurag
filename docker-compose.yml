@@ -28,7 +28,7 @@ services:
     environment:
       OLLAMA_KEEP_ALIVE: 30m
     ports:
-      - "${OLLAMA_PORT:-11434}:11434"  # host access for the eval judge
+      - "127.0.0.1:${OLLAMA_PORT:-11434}:11434"  # host access for the eval judge
     deploy:
       resources:
         reservations:
@@ -58,7 +58,7 @@ services:
     volumes:
       - qdrant_data:/qdrant/storage
     ports:
-      - "${QDRANT_PORT:-6333}:6333"
+      - "127.0.0.1:${QDRANT_PORT:-6333}:6333"
     healthcheck:
       test: ["CMD", "bash", "-c", ":> /dev/tcp/127.0.0.1/6333"]
       interval: 5s
@@ -78,7 +78,7 @@ services:
   api:
     <<: *app
     ports:
-      - "${API_PORT:-8000}:8000"
+      - "127.0.0.1:${API_PORT:-8000}:8000"
     deploy:  # the reranker runs on the GPU
       resources:
         reservations:
