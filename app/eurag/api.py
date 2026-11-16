@@ -29,7 +29,7 @@ from eurag.retrieval import Hit, Retriever
 
 STATIC_DIR = Path(__file__).parent / "static"
 _CONFIG_SETTINGS = ("llm_model", "embed_model", "embed_dim", "sparse_model", "retrieval_mode", "hybrid_prefetch",
-                    "rrf_k", "hybrid_dense_weight", "rerank", "rerank_model", "rerank_candidates",
+                    "rrf_k", "hybrid_dense_weight", "act_quota", "rerank", "rerank_model", "rerank_candidates",
                     "rerank_article_bonus", "rerank_search_weight", "rerank_gpu_mem_gb", "query_embed_num_gpu",
                     "llm_num_gpu", "top_k", "article_bonus", "num_ctx", "answer_tokens", "temperature",
                     "chars_per_token")

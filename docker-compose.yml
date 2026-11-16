@@ -11,6 +11,7 @@ x-app: &app
     # From the shell or .env, for A/B runs without editing .env
     RETRIEVAL_MODE: ${RETRIEVAL_MODE:-dense}
     HYBRID_DENSE_WEIGHT: ${HYBRID_DENSE_WEIGHT:-1.0}
+    ACT_QUOTA: ${ACT_QUOTA:-true}
     RERANK: ${RERANK:-false}
     RERANK_CANDIDATES: ${RERANK_CANDIDATES:-30}
     RERANK_ARTICLE_BONUS: ${RERANK_ARTICLE_BONUS:-0.0}

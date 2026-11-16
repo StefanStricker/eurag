@@ -20,6 +20,8 @@ class Settings(BaseSettings):
     rrf_k: int = 60
     hybrid_dense_weight: float = 1.0  # RRF weight of the dense ranking; BM25 has weight 1
     article_bonus: float = 0.02  # added to the cosine score of article chunks (dense mode only)
+    # Questions naming 2+ acts: one search per act, each act gets top_k // n slots (not combined with rerank)
+    act_quota: bool = True
     rerank: bool = False  # re-sort the search candidates with a cross-encoder before the top_k cut
     rerank_model: str = "onnx-community/bge-reranker-v2-m3-ONNX"  # fp16 ONNX, on the GPU (eurag.rerank.CUSTOM_MODELS)
     rerank_candidates: int = 30  # search hits scored by the reranker

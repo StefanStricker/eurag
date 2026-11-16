@@ -15,7 +15,7 @@ from eurag.generation import (
     fit_context,
 )
 from eurag.ollama_client import OllamaClient, query_prefix
-from eurag.retrieval import Hit, covers_paragraph, explicit_refs, mentioned_acts
+from eurag.retrieval import Hit, covers_paragraph, explicit_refs, mentioned_acts, quota_acts, quota_merge
 
 
 def _hit(n: str, size: int = 0) -> Hit:
@@ -133,6 +133,28 @@ def test_explicit_refs_annexes():
         ("AI Act", "annex", "III", None),
     ]
     assert explicit_refs("Annex III", None) == []
+
+
+def test_quota_acts_respects_filter():
+    q = "How does the AI Act relate to the GDPR?"
+    assert quota_acts(q, None) == ["GDPR", "AI Act"]
+    assert quota_acts(q, ["GDPR"]) == ["GDPR"]
+
+
+def test_quota_merge_reserves_slots_per_act():
+    ai = [Hit(s, {"act": "AI Act", "n": i}) for i, s in enumerate([0.9, 0.85, 0.8, 0.79, 0.78])]
+    gdpr = [Hit(s, {"act": "GDPR", "n": i}) for i, s in enumerate([0.6, 0.5, 0.4])]
+    merged = quota_merge([ai, gdpr], k=4)
+    # 2 slots each: GDPR's best two get in although AI Act's 3rd-5th score higher
+    assert [(h.payload["act"], h.score) for h in merged[:4]] == [
+        ("AI Act", 0.9), ("AI Act", 0.85), ("GDPR", 0.6), ("GDPR", 0.5)]
+    assert [h.score for h in merged[4:]] == [0.8, 0.79, 0.78, 0.4]
+
+
+def test_quota_merge_fills_unused_share_by_score():
+    ai = [Hit(s, {"act": "AI Act"}) for s in [0.9, 0.8, 0.7]]
+    gdpr = [Hit(0.5, {"act": "GDPR"})]  # fewer hits than its share
+    assert [h.score for h in quota_merge([ai, gdpr], k=4)[:4]] == [0.9, 0.8, 0.7, 0.5]
 
 
 def test_covers_paragraph():

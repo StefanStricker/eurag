@@ -118,6 +118,24 @@ def covers_paragraph(paragraphs: str, paragraph: str) -> bool:
     return int(lo) <= int(paragraph) <= int(hi or lo)
 
 
+def quota_acts(question: str, acts: list[str] | None) -> list[str]:
+    """Acts the question names, within the user's act filter; a quota search needs at least two."""
+    return [a for a in mentioned_acts(question) if not acts or a in acts]
+
+
+def quota_merge(ranked: list[list[Hit]], k: int) -> list[Hit]:
+    """Merge per-act rankings so each act holds k // n of the first k slots; the remaining slots go to
+    the best other hits by score. A single query vector for a question comparing two acts tends to fill
+    every slot with one of them, so the other act's provisions never reach the prompt.
+
+    Returns the first k hits by score, then the rest by score (callers cut at top_k)."""
+    share = k // len(ranked)
+    chosen = [h for hits in ranked for h in hits[:share]]
+    rest = sorted((h for hits in ranked for h in hits[share:]), key=lambda h: h.score, reverse=True)
+    free = max(k - len(chosen), 0)
+    return sorted(chosen + rest[:free], key=lambda h: h.score, reverse=True) + rest[free:]
+
+
 def _act_filter(acts: list[str] | None) -> models.Filter | None:
     if not acts:
         return None
@@ -236,7 +254,12 @@ class Retriever:
         top_k = top_k or self.settings.top_k
         [vector] = await self.ollama.embed([question], query=True)
         if self.reranker is None:
-            hits = await self._candidates(question, vector, acts, top_k * 2)
+            per_act = quota_acts(question, acts) if self.settings.act_quota else []
+            if len(per_act) >= 2:
+                ranked = await asyncio.gather(*(self._candidates(question, vector, [a], top_k * 2) for a in per_act))
+                hits = quota_merge(list(ranked), top_k)
+            else:
+                hits = await self._candidates(question, vector, acts, top_k * 2)
         else:
             candidates = await self._candidates(question, vector, acts, self.settings.rerank_candidates)
             hits = await self._rerank(question, candidates)
