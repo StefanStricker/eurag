@@ -1,7 +1,5 @@
 # EU-RAG
 
-*in development*
-
 Local question answering over EU data law, with citations. Ask a question in plain English and get an
 answer grounded in the indexed acts, with each statement linked to the article, recital or annex it
 comes from (and to EUR-Lex).
