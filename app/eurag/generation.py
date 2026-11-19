@@ -31,6 +31,7 @@ _LEAD = re.compile(r"^(?:[\s*_\-•+]|\[\d+\])*")
 _DECLINE = re.compile(rf"{_LEAD.pattern}{DECLINE_MARKER}[\s*_]*[:.\-–]?\s*", re.I)
 _CITATION = re.compile(r"\[(\d+)\]")
 _CITATION_RUN = re.compile(r"\[\d+\](?:\s*\[\d+\])*")
+_POINT_CITATION = re.compile(r"\[(\d+)\s*\([0-9a-z]{1,4}\)(?:\s*[-–]?\s*\([0-9a-z]{1,4}\))*\]", re.I)
 _CITATION_ONLY_LINE = re.compile(r"^\s*(?:\[\d+\]\s*)+$\n?", re.M)
 _DOUBLE_SPACE = re.compile(r"(?<=\S)[ \t]{2,}")
 _SPACE_BEFORE_PUNCT = re.compile(r"[ \t]+(?=[.,;:!?])")
@@ -83,6 +84,7 @@ def clean_citations(answer: str, n_sources: int) -> tuple[str, list[int], bool]:
     """
     answer, n = _DECLINE.subn("", answer, count=1)
     declined = bool(n)
+    answer = _POINT_CITATION.sub(r"[\1]", answer)
     cited: set[int] = set()
 
     def repl(m: re.Match) -> str:

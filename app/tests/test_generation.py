@@ -41,6 +41,16 @@ def test_clean_citations_fixes_spacing_left_by_removed_markers():
     assert answer == "It applies. See Article 6, too.\n  - nested [1]"
 
 
+def test_clean_citations_point_markers():
+    answer, cited, _ = clean_citations("Advise the controller [1(a)]. Monitor compliance [1(b)][1(c)].", 3)
+    assert (answer, cited) == ("Advise the controller [1]. Monitor compliance [1].", [1])
+    answer, cited, _ = clean_citations("Tasks [2(1)(a)], [2(1)(c)-(g)] and [3(iii)-(vi)]; not [9(a)].", 3)
+    assert (answer, cited) == ("Tasks [2], [2] and [3]; not.", [2, 3])
+    # Bracketed text that is not a citation stays.
+    assert clean_citations("Article 6 [(a) to (f)] and [see 2(1)].", 3)[:2] == (
+        "Article 6 [(a) to (f)] and [see 2(1)].", [])
+
+
 def test_clean_citations_decline():
     answer, cited, declined = clean_citations("NOT_COVERED: The sources do not cover tax law [2].", n_sources=3)
     assert (answer, cited, declined) == ("The sources do not cover tax law.", [], True)
